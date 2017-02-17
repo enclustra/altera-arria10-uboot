@@ -9,10 +9,10 @@
 / {
 	#address-cells = <1>;
 	#size-cells = <1>;
-	model = "Enclustra AA1";	/* Bootloader setting: uboot.model */
+	model = "Enclustra Mercury+ AA1";
 
 	chosen {
-		cff-file = "refdes.rbf";	/* Bootloader setting: uboot.rbf_filename */
+		cff-file = "fpga.rbf";
 	};
 
 	/* Clock sources */
@@ -211,24 +211,24 @@
 			pinctrl-single,register-width = <32>;
 			pinctrl-single,function-mask = <0x003f3f3f>;
 			pinctrl-single,pins =
-				<0x00000100 0x00000000>,	/* Register: configuration_dedicated_io_bank */
-				<0x00000104 0x000d0000>,	/* Register: configuration_dedicated_io_1 */
-				<0x00000108 0x000d0000>,	/* Register: configuration_dedicated_io_2 */
-				<0x0000010c 0x000c0008>,	/* Register: configuration_dedicated_io_3 */
-				<0x00000110 0x000d0008>,	/* Register: configuration_dedicated_io_4 */
-				<0x00000114 0x000d0008>,	/* Register: configuration_dedicated_io_5 */
-				<0x00000118 0x000d0008>,	/* Register: configuration_dedicated_io_6 */
-				<0x0000011c 0x000d0008>,	/* Register: configuration_dedicated_io_7 */
-				<0x00000120 0x000d0008>,	/* Register: configuration_dedicated_io_8 */
-				<0x00000124 0x000d0008>,	/* Register: configuration_dedicated_io_9 */
-				<0x00000128 0x000d0008>,	/* Register: configuration_dedicated_io_10 */
-				<0x0000012c 0x000d0008>,	/* Register: configuration_dedicated_io_11 */
-				<0x00000130 0x000d0008>,	/* Register: configuration_dedicated_io_12 */
-				<0x00000134 0x000d0008>,	/* Register: configuration_dedicated_io_13 */
-				<0x00000138 0x000d0008>,	/* Register: configuration_dedicated_io_14 */
-				<0x0000013c 0x000d0008>,	/* Register: configuration_dedicated_io_15 */
-				<0x00000140 0x000d0008>,	/* Register: configuration_dedicated_io_16 */
-				<0x00000144 0x000d0008>;	/* Register: configuration_dedicated_io_17 */
+				<0x00000100 0x00000101>,	/* Register: configuration_dedicated_io_bank */
+				<0x00000104 0x000b080a>,	/* Register: configuration_dedicated_io_1 */
+				<0x00000108 0x000b080a>,	/* Register: configuration_dedicated_io_2 */
+				<0x0000010c 0x000b080a>,	/* Register: configuration_dedicated_io_3 */
+				<0x00000110 0x000a282a>,	/* Register: configuration_dedicated_io_4 */
+				<0x00000114 0x000a282a>,	/* Register: configuration_dedicated_io_5 */
+				<0x00000118 0x0008282a>,	/* Register: configuration_dedicated_io_6 */
+				<0x0000011c 0x000a282a>,	/* Register: configuration_dedicated_io_7 */
+				<0x00000120 0x000a282a>,	/* Register: configuration_dedicated_io_8 */
+				<0x00000124 0x000a282a>,	/* Register: configuration_dedicated_io_9 */
+				<0x00000128 0x000a282a>,	/* Register: configuration_dedicated_io_10 */
+				<0x0000012c 0x000a282a>,	/* Register: configuration_dedicated_io_11 */
+				<0x00000130 0x00090000>,	/* Register: configuration_dedicated_io_12 */
+				<0x00000134 0x00090000>,	/* Register: configuration_dedicated_io_13 */
+				<0x00000138 0x00090000>,	/* Register: configuration_dedicated_io_14 */
+				<0x0000013c 0x00090000>,	/* Register: configuration_dedicated_io_15 */
+				<0x00000140 0x000a282a>,	/* Register: configuration_dedicated_io_16 */
+				<0x00000144 0x000a282a>;	/* Register: configuration_dedicated_io_17 */
 		};
 
 		/* Address Block: soc_3v_io48_pin_mux_OCP_SLV.i_io48_pin_mux_fpga_interface_grp */
