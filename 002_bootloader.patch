@@ -1,0 +1,45 @@
+diff -rupN uboot-socfpga.orig/board/altera/socfpga_arria10/socfpga_arria10.c uboot-socfpga/board/altera/socfpga_arria10/socfpga_arria10.c
+--- uboot-socfpga.orig/board/altera/socfpga_arria10/socfpga_arria10.c	2017-01-09 13:55:32.866703212 +0100
++++ uboot-socfpga/board/altera/socfpga_arria10/socfpga_arria10.c	2017-01-09 13:57:47.318699213 +0100
+@@ -16,7 +16,7 @@ DECLARE_GLOBAL_DATA_PTR;
+ int checkboard(void)
+ {
+ 	WATCHDOG_RESET();
+-	puts("BOARD : Altera SOCFPGA Arria 10 Dev Kit\n");
++	puts("BOARD : Enclustra Mercury+ AA1\n");
+ 	return 0;
+ }
+ 
+diff -rupN uboot-socfpga.orig/drivers/spi/cadence_qspi.c uboot-socfpga/drivers/spi/cadence_qspi.c
+--- uboot-socfpga.orig/drivers/spi/cadence_qspi.c	2017-01-09 13:55:32.682703218 +0100
++++ uboot-socfpga/drivers/spi/cadence_qspi.c	2017-01-09 13:58:41.866697590 +0100
+@@ -146,7 +146,7 @@ int spi_calibration(struct spi_slave *sl
+ 	int err = 0, i, range_lo = -1, range_hi = -1, delay;
+ 
+ 	/* start with slowest clock (1 MHz) */
+-	spi_set_speed(slave, 1000000);
++	spi_set_speed(slave, 10000000);
+ 
+ 	/* configure the read data capture delay register to 0 */
+ 	cadence_qspi_apb_readdata_capture(base, 1, 0);
+diff -rupN uboot-socfpga.orig/include/configs/socfpga_arria10.h uboot-socfpga/include/configs/socfpga_arria10.h
+--- uboot-socfpga.orig/include/configs/socfpga_arria10.h	2017-01-09 13:55:32.614703220 +0100
++++ uboot-socfpga/include/configs/socfpga_arria10.h	2017-01-09 14:00:33.614694266 +0100
+@@ -428,7 +428,7 @@
+  * This is default UART base address, but it can be changed through
+  * set_serial_port() during run time
+  */
+-#define CONFIG_SYS_NS16550_COM1		SOCFPGA_UART1_ADDRESS
++#define CONFIG_SYS_NS16550_COM1		SOCFPGA_UART0_ADDRESS
+ #define CONFIG_SYS_BAUDRATE_TABLE {4800, 9600, 19200, 38400, 57600, 115200}
+ #define CONFIG_SYS_NS16550_CLK		(cm_l4_sp_clk_hz)
+ 
+@@ -558,7 +558,7 @@
+ #define CONFIG_SPI_FLASH_BAR		/* Enable access > 16MiB */
+ #define CONFIG_CMD_SF			/* Serial flash commands */
+ /* Flash device info */
+-#define CONFIG_SF_DEFAULT_SPEED		(50000000)
++#define CONFIG_SF_DEFAULT_SPEED		(10000000)
+ #define CONFIG_SF_DEFAULT_MODE		SPI_MODE_3
+ #define CONFIG_SPI_FLASH_QUAD		(1)
+ /* QSPI reference clock */
