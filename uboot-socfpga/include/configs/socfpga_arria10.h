@@ -112,7 +112,7 @@
  * Console setup
  */
 /* Monitor Command Prompt */
-#define CONFIG_SYS_PROMPT		"SOCFPGA_ARRIA10 # "
+#define CONFIG_SYS_PROMPT		"=> "
 
 /* EMAC controller and PHY used */
 #define CONFIG_EMAC_BASE		SOCFPGA_EMAC0_ADDRESS
@@ -162,6 +162,7 @@
 #undef CONFIG_MD5
 
 #define CONFIG_CMD_MII
+#define CONFIG_CMD_ELF
 
 /*
  * Security support
@@ -195,7 +196,7 @@
  */
 
 /* Delay before automatically booting the default image */
-#define CONFIG_BOOTDELAY		5
+#define CONFIG_BOOTDELAY		2
 /* write protection for vendor parameters is completely disabled */
 #define CONFIG_ENV_OVERWRITE
 /* Enable auto completion of commands using TAB */
@@ -215,12 +216,10 @@
 #ifdef CONFIG_SEMIHOSTING
 #define CONFIG_BOOTCOMMAND ""
 #elif defined(CONFIG_MMC)
-#define CONFIG_BOOTCOMMAND " run core_rbf_prog; run callscript; run mmcload;" \
-	"run set_initswstate; run mmcboot"
-#define CONFIG_LINUX_DTB_NAME	socfpga_arria10_socdk_sdmmc.dtb
+#define CONFIG_BOOTCOMMAND " run mmcload; run mmcboot"
+#define CONFIG_LINUX_DTB_NAME	devicetree.dtb
 #elif defined(CONFIG_CADENCE_QSPI)
-#define CONFIG_BOOTCOMMAND "run qspirbfcore_rbf_prog; run qspiload;" \
-	"run set_initswstate; run qspiboot"
+#define CONFIG_BOOTCOMMAND "run qspirbfcore_rbf_prog; run qspielfboot"
 #define CONFIG_LINUX_DTB_NAME	socfpga_arria10_socdk_qspi.dtb
 #elif defined(CONFIG_NAND_DENALI)
 #define CONFIG_BOOTCOMMAND "run nandrbfcore_rbf_prog; run nandload;" \
@@ -246,14 +245,15 @@
 	"verify=y\0" \
 	"loadaddr=" __stringify(CONFIG_SYS_LOAD_ADDR) "\0" \
 	"fdtaddr=" __stringify(CONFIG_SYS_DTB_ADDR) "\0" \
-	"bootimage=zImage\0" \
+	"bootimage=uImage\0" \
+	"elfimage=bare-metal.axf\0" \
 	"bootimagesize=0x5F0000\0" \
 	"fdtimage=" __stringify(CONFIG_LINUX_DTB_NAME) "\0" \
 	"fdtimagesize=" __stringify(MAX_DTB_SIZE_IN_RAM) "\0" \
 	"fdt_high=0x2000000\0" \
 	"mmcloadcmd=fatload\0" \
 	"mmcloadpart=1\0" \
-	"mmcroot=/dev/mmcblk0p2\0" \
+	"mmcroot=/dev/mmcblk0p3\0" \
 	"qspi_upage_cs=2\0" \
 	"qspiloadcs=0\0" \
 	"qspibootimageaddr=0x120000\0" \
@@ -277,7 +277,7 @@
 	"mmcboot=setenv bootargs " CONFIG_BOOTARGS \
 		" root=${mmcroot} rw rootwait;" \
 		"fpgabr 1;" \
-		"bootz ${loadaddr} - ${fdtaddr}\0" \
+		"bootm ${loadaddr} - ${fdtaddr}\0" \
 	"netboot=dhcp ${bootimage};" \
 		"tftp ${fdtaddr} ${fdtimage} ; run ramboot\0" \
 	"qspiload=sf probe ${qspiloadcs};" \
@@ -287,6 +287,14 @@
 		" root=${qspiroot} rw rootfstype=${qspirootfstype};" \
 		"fpgabr 1;" \
 		"bootz ${loadaddr} - ${fdtaddr}\0" \
+	"qspielfboot=sf probe ${qspiloadcs};" \
+		"sf read ${loadaddr} ${qspibootimageaddr} ${bootimagesize};" \
+		"fpgabr 1;" \
+		"bootelf ${loadaddr};\0" \
+	"mmcelfboot=mmc rescan;" \
+		"fpgabr 1;" \
+		"${mmcloadcmd} mmc 0:${mmcloadpart} ${loadaddr} ${elfimage};" \
+		"bootelf ${loadaddr};\0" \
 	"nandload=" \
 		"nand read ${loadaddr} ${nandbootimageaddr} ${bootimagesize};" \
 		"nand read ${fdtaddr} ${nandfdtaddr} ${fdtimagesize}\0" \
@@ -428,7 +436,7 @@
  * This is default UART base address, but it can be changed through
  * set_serial_port() during run time
  */
-#define CONFIG_SYS_NS16550_COM1		SOCFPGA_UART1_ADDRESS
+#define CONFIG_SYS_NS16550_COM1		SOCFPGA_UART0_ADDRESS
 #define CONFIG_SYS_BAUDRATE_TABLE {4800, 9600, 19200, 38400, 57600, 115200}
 #define CONFIG_SYS_NS16550_CLK		(cm_l4_sp_clk_hz)
 
@@ -558,7 +566,7 @@
 #define CONFIG_SPI_FLASH_BAR		/* Enable access > 16MiB */
 #define CONFIG_CMD_SF			/* Serial flash commands */
 /* Flash device info */
-#define CONFIG_SF_DEFAULT_SPEED		(50000000)
+#define CONFIG_SF_DEFAULT_SPEED		(10000000)
 #define CONFIG_SF_DEFAULT_MODE		SPI_MODE_3
 #define CONFIG_SPI_FLASH_QUAD		(1)
 /* QSPI reference clock */
@@ -595,8 +603,8 @@ CONFIG_NAND_DENALI is also defined.
 /* here are the defines for NAND */
 #define CONFIG_ENV_IS_NOWHERE
 #define CONFIG_NAND_RBF_ADDR		0x720000
-#define CONFIG_CMD_NAND
-#define CONFIG_CMD_NAND_TRIMFFS		1
+#undef CONFIG_CMD_NAND
+#undef CONFIG_CMD_NAND_TRIMFFS		1
 #define CONFIG_SYS_MAX_NAND_DEVICE	1
 /* the following, when defined, requries 128K from malloc! */
 #undef CONFIG_SYS_NAND_USE_FLASH_BBT

@@ -16,7 +16,7 @@ DECLARE_GLOBAL_DATA_PTR;
 int checkboard(void)
 {
 	WATCHDOG_RESET();
-	puts("BOARD : Altera SOCFPGA Arria 10 Dev Kit\n");
+	puts("BOARD : Enclustra Mercury+ AA1\n");
 	return 0;
 }
 
