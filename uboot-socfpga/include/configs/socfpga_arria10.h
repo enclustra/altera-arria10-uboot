@@ -687,7 +687,7 @@ CONFIG_NAND_DENALI is also defined.
  * Disabled by default to free up OCRAM space. Compile using linaro 4.9
  * appears to produce more efficient code.
  */
-#undef CONFIG_I2C
+#define CONFIG_I2C
 #ifdef CONFIG_I2C
 #define CONFIG_HARD_I2C
 #define CONFIG_DW_I2C
