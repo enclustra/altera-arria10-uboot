@@ -216,7 +216,7 @@
 #ifdef CONFIG_SEMIHOSTING
 #define CONFIG_BOOTCOMMAND ""
 #elif defined(CONFIG_MMC)
-#define CONFIG_BOOTCOMMAND " run mmcload; run mmcboot"
+#define CONFIG_BOOTCOMMAND " run mmcload; run ramboot"
 #define CONFIG_LINUX_DTB_NAME	devicetree.dtb
 #elif defined(CONFIG_CADENCE_QSPI)
 #define CONFIG_BOOTCOMMAND "run qspirbfcore_rbf_prog; run qspielfboot"
@@ -268,12 +268,18 @@
 	"nandrootfstype=jffs2\0" \
 	"nandrbfcore_rbf_prog=" \
 		"fpga loadfs 0 nand 0:0 ${nandrbfcoreimage} core\0" \
-	"ramboot=setenv bootargs " CONFIG_BOOTARGS \
-		" printk.time=1 debug mem=${fdt_high} " \
-		"lpj=3977216;fpgabr 1; bootz ${loadaddr} - ${fdtaddr}\0" \
+    "ramdisk_loadaddr=0x4000000\0" \
+    "kernel_loadaddr=0x3000000\0" \
+    "devicetree_loadaddr=0x2A00000\0" \
+    "initrd_high=0x3c00000\0" \
+    "fdt_high=0x3c00000\0" \
+	"ramboot=setenv bootargs console=ttyS0,115200 " \
+        "earlyprintk rw root=/dev/ram; fpgabr 1;" \
+        "bootm ${kernel_loadaddr} ${ramdisk_loadaddr} ${devicetree_loadaddr}\0" \
 	"mmcload=mmc rescan;" \
-		"${mmcloadcmd} mmc 0:${mmcloadpart} ${loadaddr} ${bootimage};" \
-		"${mmcloadcmd} mmc 0:${mmcloadpart} ${fdtaddr} ${fdtimage}\0" \
+		"${mmcloadcmd} mmc 0:${mmcloadpart} ${ramdisk_loadaddr} /uramdisk; " \
+		"${mmcloadcmd} mmc 0:${mmcloadpart} ${kernel_loadaddr} /uImage; " \
+		"${mmcloadcmd} mmc 0:${mmcloadpart} ${devicetree_loadaddr} /devicetree.dtb\0" \
 	"mmcboot=setenv bootargs " CONFIG_BOOTARGS \
 		" root=${mmcroot} rw rootwait;" \
 		"fpgabr 1;" \
