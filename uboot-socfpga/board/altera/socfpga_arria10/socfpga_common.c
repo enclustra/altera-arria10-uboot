@@ -14,8 +14,184 @@
 #include <miiphy.h>
 #include <netdev.h>
 #include "../../../drivers/net/designware.h"
+#include <i2c.h>
 
 DECLARE_GLOBAL_DATA_PTR;
+
+#define ATSHA204_COMMAND	0x03
+#define ATSHA204_READ_CMD	0x02
+
+#define ATSHA204_CONFIG_ZONE	0x00
+#define ATSHA204_OTP_ZONE	0x01
+#define ATSHA204_DATA_ZONE	0x02
+
+#define ATSHA204_READ32_BYTES_FLAG	(1<<7)
+
+/* i2c controller defines */
+#define IC_SDA_HOLD_OFFSET	0x007c
+#define IC_ENABLE_OFFSET	0x006c
+#define IC_ENABLE		0x0001
+
+u16 atsha204_crc16(const u8 *buf, const u8 len)
+{
+	u8 i;
+	u16 crc16 = 0;
+
+	for (i = 0; i < len; i++) {
+		u8 shift;
+
+		for (shift = 0x01; shift > 0x00; shift <<= 1) {
+			u8 data_bit = (buf[i] & shift) ? 1 : 0;
+			u8 crc_bit = crc16 >> 15;
+
+			crc16 <<= 1;
+
+			if ((data_bit ^ crc_bit) != 0)
+				crc16 ^= 0x8005;
+		}
+	}
+
+	return crc16;
+}
+
+struct __attribute__((packed, aligned(1))) atsha204_read_command {
+	u8 count;
+	u8 opcode;
+	u8 param1;
+	u16 param2;
+	u16 checksum;
+};
+
+int atsha204_send_read_cmd(u8 i2c_address, u8 zone, u16 address, u8 read_block) {
+
+	int ret;
+	u16 crc;
+	struct atsha204_read_command packet;
+
+	packet.count = sizeof(struct atsha204_read_command);
+	packet.opcode = ATSHA204_READ_CMD;
+	packet.param1 = zone;
+	if(read_block) packet.param1 |= ATSHA204_READ32_BYTES_FLAG;
+	packet.param2 = address;
+
+	crc = atsha204_crc16((u8*)(&packet), sizeof(struct atsha204_read_command) - 2);
+	packet.checksum = crc;
+
+	ret = i2c_write(i2c_address,
+		  ATSHA204_COMMAND,
+		  1,
+		  (u8*)&packet,
+		  sizeof(struct atsha204_read_command));
+	if(ret) {
+		printf("Writing failed \n");
+		return ret;
+	}
+	/* reading may take up to 4 ms */
+	udelay(4000);
+
+	return 0;
+}
+
+int atsha204_wakeup(u8 i2c_address) {
+
+	u8 wake_cmd = 0x0;
+	int ret = 0;
+
+	ret = i2c_write(i2c_address,
+		  0,
+		  0,
+		  &wake_cmd,
+		  1);
+
+	if(ret) return ret;
+
+	/* wait for the chip to wake up */
+	udelay(2000);
+	return 0;
+
+}
+
+int atsha204_read_data(u8 i2c_address, u8* buffer, u8 len) {
+
+	int ret = 0;
+	u8 first_word[8];
+	u8 msg_len;
+	u8 i;
+
+	if (len < 8) return 12;
+	/* read the first 4 bytes from the device*/
+	ret = i2c_read(i2c_address,
+			0,
+			0,
+			first_word,
+			8);
+
+	if(ret) return ret;
+
+	/* the first transferred byte is total length of the msg */
+	msg_len = first_word[0];
+
+	for(i = 0; i < 4; i++) buffer[i] = first_word[i+1];
+
+	msg_len -= 4;
+
+	return msg_len;
+}
+
+int atsha204_read_otp_register(u8 i2c_address, u8 reg, u8* buffer) {
+
+	u8 data[8];
+	u8 i;
+	int ret;
+
+	ret = atsha204_wakeup(i2c_address);
+	if(ret) return ret;
+
+	ret = atsha204_send_read_cmd(i2c_address, ATSHA204_OTP_ZONE, reg, 0);
+	if(ret) return ret;
+
+	/* Attempt to read the register */
+
+	ret = atsha204_read_data(i2c_address, data, 8);
+	if(ret < 0) return ret;
+
+	for(i = 0; i < 4; i++) buffer[i] = data[i];
+
+	return 0;
+}
+
+int atsha204_get_mac(u8 i2c_address, u8* buffer) {
+
+	int ret;
+	u8 data[4];
+	u8 i;
+
+	ret = atsha204_read_otp_register(i2c_address, 4, data);
+	if(ret) return ret;
+	else for(i = 0; i < 4; i++) buffer[i] = data[i];
+
+	ret = atsha204_read_otp_register(i2c_address, 5, data);
+	if(ret) return ret;
+	else {
+		buffer[4] = data[0];
+		buffer[5] = data[1];
+	}
+	return 0;
+}
+
+struct eeprom_mem {
+	u8 i2c_addr;
+	int (*mac_reader)(u8 i2c_address, u8* buffer);
+	int (*wakeup)(u8 i2c_address);
+};
+
+static struct eeprom_mem eeproms[] = {
+	{ .i2c_addr = 0x64,
+	  .mac_reader = atsha204_get_mac,
+	  .wakeup = atsha204_wakeup,
+	},
+};
+
 
 /*
  * Initialization function which happen at early stage of c code
@@ -39,6 +215,53 @@ int board_init(void)
 #ifdef CONFIG_BOARD_LATE_INIT
 int board_late_init(void)
 {
+#ifdef CONFIG_I2C
+	int i;
+	u8 hwaddr[6] = {0, 0, 0, 0, 0, 0};
+	u32 hwaddr_h;
+	char hwaddr_str[16];
+	bool hwaddr_set;
+
+	hwaddr_set = false;
+
+	i2c_init(0,0);
+	if(getenv("ethaddr") == NULL) {
+		for (i = 0; i < ARRAY_SIZE(eeproms); i++) {
+
+			if(eeproms[i].wakeup)
+				eeproms[i].wakeup(eeproms[i].i2c_addr);
+
+			/* Probe the chip */
+			if(i2c_probe(eeproms[i].i2c_addr))
+				continue;
+
+			if(eeproms[i].mac_reader(eeproms[i].i2c_addr, hwaddr))
+				continue;
+
+			sprintf(hwaddr_str,
+				"%02X:%02X:%02X:%02X:%02X:%02X",
+				hwaddr[0],
+				hwaddr[1],
+				hwaddr[2],
+				hwaddr[3],
+				hwaddr[4],
+				hwaddr[5]);
+
+			/* Check if the value is a valid mac registered for
+			* Enclustra  GmbH */
+			hwaddr_h = hwaddr[0] | hwaddr[1] << 8 | hwaddr[2] << 16;
+			if ((hwaddr_h & 0xFFFFFF) != ENCLUSTRA_MAC)
+				continue;
+
+			/* Set the actual env variable */
+			setenv("ethaddr", hwaddr_str);
+			hwaddr_set = true;
+			break;
+		}
+		if (!hwaddr_set)
+			setenv("ethaddr", ENCLUSTRA_ETHADDR_DEFAULT);
+	}
+#endif
 	return 0;
 }
 #endif
