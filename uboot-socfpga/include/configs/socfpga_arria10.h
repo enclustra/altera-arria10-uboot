@@ -48,6 +48,9 @@
 /* Enable board late init for ECC setup if IRQ enabled */
 #define CONFIG_BOARD_LATE_INIT
 
+#define ENCLUSTRA_MAC   0xF7B020
+#define ENCLUSTRA_ETHADDR_DEFAULT   "00:07:ED:00:00:01"
+
 /* Cache options */
 #ifdef TEST_AT_ASIMOV
 #undef  CONFIG_SYS_DCACHE_OFF
