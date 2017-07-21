@@ -10,9 +10,9 @@
 #define	_SOCFPGA_CFF_H_
 
 #ifndef __ASSEMBLY_
-#if defined(CONFIG_CADENCE_QSPI) || defined(CONFIG_NAND_DENALI)
+#if defined(CONFIG_CADENCE_QSPI_CFF) || defined(CONFIG_NAND_DENALI)
 struct raw_flash_info {
-#if defined(CONFIG_CADENCE_QSPI)
+#if defined(CONFIG_CADENCE_QSPI_CFF)
 	struct spi_flash *flash;
 #elif defined(CONFIG_NAND_DENALI)
 	nand_info_t *flash;
@@ -28,7 +28,7 @@ struct sdmmc_flash_info {
 #endif
 
 struct cff_flash_info {
-#if defined(CONFIG_CADENCE_QSPI) || defined(CONFIG_NAND_DENALI)
+#if defined(CONFIG_CADENCE_QSPI_CFF) || defined(CONFIG_NAND_DENALI)
 	struct raw_flash_info raw_flashinfo;
 	u32 buffer[1024] __aligned(ARCH_DMA_MINALIGN);
 #endif

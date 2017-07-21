@@ -31,7 +31,7 @@ static int cff_flash_preinit(struct cff_flash_info *cff_flashinfo,
 	fpga_fs_info *fpga_fsinfo, u32 *buffer, u32 *buffer_sizebytes);
 static int cff_flash_probe(struct cff_flash_info *cff_flashinfo)
 {
-#ifdef CONFIG_CADENCE_QSPI
+#ifdef CONFIG_CADENCE_QSPI_CFF
 	/* initialize the Quad SPI controller */
 	cff_flashinfo->raw_flashinfo.flash =
 		spi_flash_probe(0, 0, CONFIG_SF_DEFAULT_SPEED, SPI_MODE_3);
@@ -71,7 +71,7 @@ static int flash_read(struct cff_flash_info *cff_flashinfo,
 #endif
 	size_t bytesread = 1;
 
-#ifdef CONFIG_CADENCE_QSPI
+#ifdef CONFIG_CADENCE_QSPI_CFF
 	spi_flash_read(cff_flashinfo->raw_flashinfo.flash,
 		cff_flashinfo->flash_offset,
 		size_read,
@@ -277,7 +277,7 @@ static int get_cff_offset(const void *fdt)
 	nodeoffset = fdt_subnode_offset(fdt, 0, "chosen");
 
 	if (nodeoffset >= 0) {
-#if defined(CONFIG_CADENCE_QSPI) && defined(CONFIG_QSPI_RBF_ADDR)
+#if defined(CONFIG_CADENCE_QSPI_CFF) && defined(CONFIG_QSPI_RBF_ADDR)
 		return fdtdec_get_int(fdt, nodeoffset, "cff-offset",
 			CONFIG_QSPI_RBF_ADDR);
 #elif defined(CONFIG_NAND_DENALI) && defined(CONFIG_NAND_RBF_ADDR)
@@ -401,7 +401,7 @@ int cff_from_flash(fpga_fs_info *fpga_fsinfo)
 	return 1;
 }
 
-#if defined(CONFIG_CADENCE_QSPI) || defined(CONFIG_NAND_DENALI) || \
+#if defined(CONFIG_CADENCE_QSPI_CFF) || defined(CONFIG_NAND_DENALI) || \
 +(defined(CONFIG_MMC) && defined(CONFIG_CHECK_FPGA_DATA_CRC))
 /*
  * This function is called when the optional checksum checking on SDMMC, QSPI,
@@ -420,7 +420,7 @@ static int cff_flash_preinit(struct cff_flash_info *cff_flashinfo,
 	size_t buffer_size = *buffer_sizebytes;
 	u32 *buffer_ptr = (u32 *)*buffer;
 
-#if defined(CONFIG_CADENCE_QSPI) || defined(CONFIG_NAND_DENALI)
+#if defined(CONFIG_CADENCE_QSPI_CFF) || defined(CONFIG_NAND_DENALI)
 	cff_flashinfo->flash_offset =
 		simple_strtoul(fpga_fsinfo->filename, NULL, 16);
 #elif defined(CONFIG_MMC)
@@ -582,10 +582,10 @@ if (0 == cff_flashinfo->remaining) {
 
 	return 0;
 }
-#endif /* #if defined(CONFIG_CADENCE_QSPI) || defined(CONFIG_NAND_DENALI) || \
+#endif /* #if defined(CONFIG_CADENCE_QSPI_CFF) || defined(CONFIG_NAND_DENALI) || \
 (defined(CONFIG_MMC) && defined(CONFIG_CHECK_FPGA_DATA_CRC)) */
 
-#if defined(CONFIG_CADENCE_QSPI)
+#if defined(CONFIG_CADENCE_QSPI_CFF)
 int cff_from_qspi_env(void)
 {
 	int qspi_rbf_addr = -1;
@@ -613,7 +613,7 @@ int cff_from_qspi_env(void)
 
 	return cff_from_flash(&fpga_fsinfo);
 }
-#endif /* #ifdef CONFIG_CADENCE_QSPI */
+#endif /* #ifdef CONFIG_CADENCE_QSPI_CFF */
 
 #ifdef CONFIG_NAND_DENALI
 int cff_from_nand_env(void)

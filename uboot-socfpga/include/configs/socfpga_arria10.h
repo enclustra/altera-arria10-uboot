@@ -568,7 +568,6 @@
 #ifdef CONFIG_CADENCE_QSPI
 /* Enable it if you want to use dual-stacked mode */
 #undef CONFIG_SF_DUAL_FLASH
-#define CONFIG_QSPI_RBF_ADDR 		0x720000
 #define CONFIG_SPI_FLASH		/* SPI flash subsystem */
 #define CONFIG_SPI_FLASH_STMICRO	/* Micron/Numonyx flash */
 #define CONFIG_SPI_FLASH_SPANSION	/* Spansion flash */
@@ -589,12 +588,15 @@
 #define CONFIG_CQSPI_TCHSH_NS		(20)
 #define CONFIG_CQSPI_TSLCH_NS		(20)
 #define CONFIG_CQSPI_DECODER		(0)
+#ifdef CONFIG_CADENCE_QSPI_CFF
+#define CONFIG_QSPI_RBF_ADDR 		0x720000
 #define CONFIG_ENV_IS_IN_SPI_FLASH
 #define CONFIG_ENV_OFFSET		0x710000
 #define CONFIG_ENV_SIZE			(4 * 1024)
 #define CONFIG_ENV_SECT_SIZE		(4 * 1024)
 #define CONFIG_BOOT_FLASH_TYPE "qspi"
-#endif	/* CONFIG_CADENCE_QSPI */
+#endif
+#endif /* CONFIG_CADENCE_QSPI */
 
 /*
  * NAND
