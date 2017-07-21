@@ -79,8 +79,6 @@ include config.mk
 ####################
 # Static Settings
 
-DTS := devicetree.dts
-
 TGZ := $(SOCEDS_DEST_ROOT)/host_tools/altera/bootloaders/u-boot/uboot-socfpga.tar.gz
 
 PREBUILT_DIR := $(SOCEDS_DEST_ROOT)/host_tools/altera/bootloaders/u-boot/prebuilt
@@ -90,9 +88,19 @@ CROSS_COMPILE := arm-altera-eabi-
 DEVICE_FAMILY := arria10
 ####################
 
+# BOOT_DEVICE = QSPI
+#
 MKPIMAGE_HEADER_VERSION := 1
 
 MAKE_ARGS += CROSS_COMPILE=$(CROSS_COMPILE)
+
+DEVICETREE.QSPI = devicetree_qspi.dts
+DEVICETREE.SDMMC = devicetree.dts
+DTS := $(DEVICETREE.$(BOOT_DEVICE))
+
+ifeq ($(DTS),)
+$(error ERROR: DTS not set. Check your Settings and Regenerate your Bootloader)
+endif
 
 DTC_ARGS :=
 
@@ -174,6 +182,7 @@ endif
 dtb: $(DTB)
 
 $(DTB): $(DTS)
+	$(info Building devicetree ${DST})
 	$(DTC) -O dtb -o $@ -I dts $(DTC_ARGS) $<
 
 ################
