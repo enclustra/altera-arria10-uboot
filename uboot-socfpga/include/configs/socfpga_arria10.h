@@ -194,6 +194,21 @@
 /* Support loading of zImage */
 #define CONFIG_CMD_BOOTZ
 
+/* QSPI env defines */
+#define QSPI_PRELOADER_OFFSET       0x00000000  // Storage for Preloader
+#define QSPI_DTB_OFFSET         0x00100000  // Storage for Linux Devicetree
+#define QSPI_BOOTSCRIPT_OFFSET      0x00180000  // Storage for Uboot boot script
+#define QSPI_LINUX_OFFSET       0x00200000  // Storage for Linux Kernel
+#define QSPI_BITSTREAM_OFFSET   0x00720000
+#define QSPI_ROOTFS_OFFSET      0x01320000  // Storage for Linux Root FS (JFFS)
+#define QSPI_PRELOADER_SIZE     0x00100000  // size 1 MiB
+#define QSPI_BITSTREAM_SIZE     0x00c00000  // size 12MiB
+#define QSPI_DTB_SIZE           0x00080000  // size 512 KiB
+#define QSPI_BOOTSCRIPT_SIZE        0x00040000  // size 512 KiB
+#define QSPI_LINUX_SIZE         0x00740000  // size 5 MB
+#define QSPI_ROOTFS_SIZE        0x03000000  // size 48 MiB
+#define QSPI_RAMDISK_SIZE       0x1000000  // size 16MB MiB
+
 /*
  * Environment setup
  */
@@ -219,10 +234,10 @@
 #ifdef CONFIG_SEMIHOSTING
 #define CONFIG_BOOTCOMMAND ""
 #elif defined(CONFIG_MMC)
-#define CONFIG_BOOTCOMMAND " run mmcload; run ramboot"
+#define CONFIG_BOOTCOMMAND "echo Booting on SD Card ...; mmc rescan && fatload mmc 0 ${bootscript_loadaddr} uboot.scr && source ${bootscript_loadaddr};"
 #define CONFIG_LINUX_DTB_NAME	devicetree.dtb
-#elif defined(CONFIG_CADENCE_QSPI)
-#define CONFIG_BOOTCOMMAND "run qspirbfcore_rbf_prog; run qspielfboot"
+#elif defined(CONFIG_CADENCE_QSPI_CFF)
+#define CONFIG_BOOTCOMMAND "echo Booting on QSPI Flash ...; sf probe && sf read ${bootscript_loadaddr} ${qspi_bootscript_offset} ${bootscript_size} && source ${bootscript_loadaddr};"
 #define CONFIG_LINUX_DTB_NAME	socfpga_arria10_socdk_qspi.dtb
 #elif defined(CONFIG_NAND_DENALI)
 #define CONFIG_BOOTCOMMAND "run nandrbfcore_rbf_prog; run nandload;" \
@@ -259,9 +274,21 @@
 	"mmcroot=/dev/mmcblk0p3\0" \
 	"qspi_upage_cs=2\0" \
 	"qspiloadcs=0\0" \
-	"qspibootimageaddr=0x120000\0" \
-	"qspifdtaddr=0x100000\0" \
 	"qspirbfaddr=" __stringify(CONFIG_QSPI_RBF_ADDR) "\0" \
+	"qspi_preloader_offset=" __stringify(QSPI_PRELOADER_OFFSET) "\0" \
+	"qspi_devicetree_offset=" __stringify(QSPI_DTB_OFFSET) "\0" \
+	"qspi_kernel_offset=" __stringify(QSPI_LINUX_OFFSET) "\0" \
+	"qspi_bootscript_offset=" __stringify(QSPI_BOOTSCRIPT_OFFSET) "\0" \
+	"qspi_ramdisk_offset=" __stringify(QSPI_ROOTFS_OFFSET) "\0" \
+	"qspi_bitstream_offset=" __stringify(QSPI_BITSTREAM_OFFSET) "\0" \
+	"qspi_rootfs_offset=" __stringify(QSPI_ROOTFS_OFFSET) "\0" \
+	"preloader_size=" __stringify(QSPI_PRELOADER_SIZE) "\0" \
+	"devicetree_size=" __stringify(QSPI_DTB_SIZE) "\0" \
+	"kernel_size=" __stringify(QSPI_LINUX_SIZE) "\0" \
+    "ramdisk_size=" __stringify(QSPI_RAMDISK_SIZE) "\0" \
+    "rootfs_size=" __stringify(QSPI_ROOTFS_SIZE) "\0" \
+	"bootscript_size=" __stringify(QSPI_BOOTSCRIPT_SIZE) "\0" \
+	"bitstream_size=" __stringify(QSPI_BITSTREAM_SIZE) "\0" \
 	"qspiroot=/dev/mtdblock1\0" \
 	"qspirootfstype=jffs2\0" \
 	"nandbootimageaddr=0x120000\0" \
@@ -272,8 +299,12 @@
 	"nandrbfcore_rbf_prog=" \
 		"fpga loadfs 0 nand 0:0 ${nandrbfcoreimage} core\0" \
     "ramdisk_loadaddr=0x4000000\0" \
+    "rootfs_loadaddr=0x4000000\0" \
+    "bitstream_loadaddr=0x3600000\0" \
+    "preloader_loadaddr=0x2B00000\0" \
     "kernel_loadaddr=0x3000000\0" \
     "devicetree_loadaddr=0x2A00000\0" \
+    "bootscript_loadaddr=0x100000\0" \
     "initrd_high=0x3c00000\0" \
     "fdt_high=0x3c00000\0" \
 	"ramboot=setenv bootargs console=ttyS0,115200 " \
