@@ -65,6 +65,11 @@ config SPL_BUILD
 	depends on $KCONFIG_OBJDIR="spl" || $KCONFIG_OBJDIR="tpl"
 	default y
 
+config CADENCE_QSPI_CFF
+	bool
+	prompt "QSPI boot image"
+	depends on CADENCE_QSPI
+
 config TPL_BUILD
 	bool
 	depends on $KCONFIG_OBJDIR="tpl"
