@@ -23,6 +23,7 @@ DECLARE_GLOBAL_DATA_PTR;
 #define ALTERA_NONE 0
 #define ALTERA_MMC 1
 #define ALTERA_QSPI 2
+#define ALTERA_EMMC 3
 #define MMC_CLK_DIV 0x9
 #define QSPI_CLK_DIV 0x384
 #define ALTERA_PINMUX_OFFS 0xffd07200
@@ -72,6 +73,17 @@ static void set_mux_mmc (void)
 	}
 }
 
+static void set_mux_emmc (void)
+{
+	u32 pinmux_arr[] = {0xc, 0x8, 0x10, 0x8, 0x14, 0x8, 0x18, 0x8, 0x1c, 0x8, 0x20, 0x8, 0x24, 0xf, 0x28, 0xf, 0x2c, 0x8, 0x30, 0x8, 0x34, 0x8, 0x38, 0x8, 0x3c, 0xf, 0x40, 0xf, 0x110, 0xa282a, 0x130, 0xa282a, 0x134, 0xa282a, 0x138, 0xa282a, 0x13c, 0xa282a};
+	u32 len, i, offset, value;
+	len = sizeof(pinmux_arr)/sizeof(u32);
+	for (i=0; i<len; i+=2) {
+		offset = pinmux_arr[i];
+		value = pinmux_arr[i+1];
+		writel(value, ALTERA_PINMUX_OFFS + offset);
+	}
+}
 static void set_mux_qspi (void)
 {
 	u32 pinmux_arr[] = {0xc, 0x4, 0x10, 0x4, 0x14, 0x4, 0x18, 0x4, 0x1c, 0x4, 0x20, 0x4, 0x24, 0xf, 0x28, 0xf, 0x2c, 0xa, 0x30, 0xa, 0x34, 0xa, 0x38, 0xa, 0x3c, 0xf, 0x40, 0xf, 0x110, 0x8282a};
@@ -104,6 +116,13 @@ void altera_set_storage (int store)
 			altera_current_storage = ALTERA_MMC;
 			writel(MMC_CLK_DIV, &clock_manager_base->main_pll_cntr6clk);
 			break;
+		case ALTERA_EMMC:
+			set_mux_emmc();
+			gpio_set(2, 6, 1);
+			gpio_set(1, 5, 1);
+			altera_current_storage = ALTERA_EMMC;
+			writel(MMC_CLK_DIV, &clock_manager_base->main_pll_cntr6clk);
+			break;
 		case ALTERA_QSPI:
 			set_mux_qspi();
 			gpio_set(2, 6, 1);
@@ -125,6 +144,8 @@ int altera_set_storage_cmd(cmd_tbl_t *cmdtp, int flag, int argc, char * const ar
 		altera_set_storage(ALTERA_MMC);
 	else if (!strcmp(argv[1], "QSPI"))
 		altera_set_storage(ALTERA_QSPI);
+	else if (!strcmp(argv[1], "EMMC"))
+		altera_set_storage(ALTERA_EMMC);
 	else return CMD_RET_USAGE;
 
 	return CMD_RET_SUCCESS;
@@ -132,7 +153,7 @@ int altera_set_storage_cmd(cmd_tbl_t *cmdtp, int flag, int argc, char * const ar
 
 U_BOOT_CMD(altera_set_storage, 2, 0, altera_set_storage_cmd,
 		   "Set non volatile memory access",
-		    "<MMC|QSPI> - Set access for the selected memory device");
+		    "<MMC|QSPI|EMMC> - Set access for the selected memory device");
 
 static int __do_pinctr_pins(const void *blob, int child, const char *node_name)
 {
