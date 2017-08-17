@@ -27,6 +27,39 @@ DECLARE_GLOBAL_DATA_PTR;
 #define QSPI_CLK_DIV 0x384
 #define ALTERA_PINMUX_OFFS 0xffd07200
 
+#define ALTERA_GPIO_BASE 0xFFC02900
+#define GPIO_DATA_OFFS 0x0
+#define GPIO_DIR_OFFS 0x4
+#define GPIO_OUT 0x1
+
+void gpio_set(int gpio_chip, int gpio_nr, int value)
+{
+	u32 reg, offs;
+
+	offs = ALTERA_GPIO_BASE + (gpio_chip * 0x100);
+	reg = readl(offs + GPIO_DATA_OFFS);
+	if (value)
+		reg |= (1 << gpio_nr);
+	else
+		reg &= ~(1 << gpio_nr);
+
+	writel(reg, offs + GPIO_DATA_OFFS);
+}
+
+void gpio_dir(int gpio_chip, int gpio_nr, int dir)
+{
+	u32 reg, offs;
+
+	offs = ALTERA_GPIO_BASE + (gpio_chip * 0x100);
+	reg = readl(offs + GPIO_DIR_OFFS);
+	if (dir)
+		reg |= (1 << gpio_nr);
+	else
+		reg &= ~(1 << gpio_nr);
+
+	writel(reg, offs + GPIO_DIR_OFFS);
+}
+
 static void set_mux_mmc (void)
 {
 	u32 pinmux_arr[] = {0xc, 0x8, 0x10, 0x8, 0x14, 0x8, 0x18, 0x8, 0x1c, 0x8, 0x20, 0x8, 0x24, 0xf, 0x28, 0xf, 0x2c, 0xa, 0x30, 0xa, 0x34, 0xa, 0x38, 0xa, 0x3c, 0xf, 0x40, 0xf, 0x110, 0xa282a};
@@ -60,15 +93,21 @@ void altera_set_storage (int store)
 	if (store == altera_current_storage)
 		return;
 
+	gpio_dir(2, 6, GPIO_OUT);
+	gpio_dir(1, 5, GPIO_OUT);
 	switch (store)
 	{
 		case ALTERA_MMC:
 			set_mux_mmc();
+			gpio_set(2, 6, 0);
+			gpio_set(1, 5, 0);
 			altera_current_storage = ALTERA_MMC;
 			writel(MMC_CLK_DIV, &clock_manager_base->main_pll_cntr6clk);
 			break;
 		case ALTERA_QSPI:
 			set_mux_qspi();
+			gpio_set(2, 6, 1);
+			gpio_set(1, 5, 0);
 			altera_current_storage = ALTERA_QSPI;
 			writel(QSPI_CLK_DIV, &clock_manager_base->main_pll_cntr6clk);
 			break;
