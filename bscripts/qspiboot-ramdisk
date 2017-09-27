@@ -1,0 +1,9 @@
+altera_set_storage QSPI;
+sf probe || exit;
+sf read ${ramdisk_loadaddr} ${qspi_ramdisk_offset} ${ramdisk_size} || exit;
+sf read ${kernel_loadaddr} ${qspi_kernel_offset} ${kernel_size} || exit;
+sf read ${devicetree_loadaddr} ${qspi_devicetree_offset} ${devicetree_size} || exit;
+
+setenv bootargs console=ttyS0,115200 earlyprintk rw root=/dev/ram;
+fpgabr 1;
+bootm ${kernel_loadaddr} ${ramdisk_loadaddr} ${devicetree_loadaddr};
