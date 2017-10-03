@@ -124,9 +124,15 @@ UBOOT.MKPIMAGE_ENCRYPTED_BINARY_W_DTB := uboot_w_dtb-mkpimage-encrypted.abin
 
 UBOOT.MKPIMAGE_ENCRYPTED_SIGNED_BINARY_W_DTB := uboot_w_dtb-mkpimage-encrypted-signed.abin
 
+ifeq ($(MERCURY_AA1_REV1),1)
+SOCFPGA_BOARD_CONFIG.QSPI = socfpga_$(DEVICE_FAMILY)_rev1_qspi_defconfig
+SOCFPGA_BOARD_CONFIG.NAND = socfpga_$(DEVICE_FAMILY)_rev1_nand_defconfig
+SOCFPGA_BOARD_CONFIG.SDMMC = socfpga_$(DEVICE_FAMILY)_rev1_config
+else
 SOCFPGA_BOARD_CONFIG.QSPI = socfpga_$(DEVICE_FAMILY)_qspi_defconfig
 SOCFPGA_BOARD_CONFIG.NAND = socfpga_$(DEVICE_FAMILY)_nand_defconfig
 SOCFPGA_BOARD_CONFIG.SDMMC = socfpga_$(DEVICE_FAMILY)_config
+endif
 SOCFPGA_BOARD_CONFIG := $(SOCFPGA_BOARD_CONFIG.$(BOOT_DEVICE))
 
 ifeq ($(SOCFPGA_BOARD_CONFIG),)

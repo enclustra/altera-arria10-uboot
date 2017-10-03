@@ -253,7 +253,12 @@
  * CONFIG_BOOTARGS goes into the environment value "bootargs".
  * Do note the value will overide also the chosen node in FDT blob.
  */
-#define CONFIG_BOOTARGS "console=ttyS0," __stringify(CONFIG_BAUDRATE)
+#if defined(CONFIG_AA1_MODULE_REV1)
+#define LINUX_TTY "ttyS0"
+#else
+#define LINUX_TTY "ttyS1"
+#endif
+#define CONFIG_BOOTARGS "console=" LINUX_TTY "," __stringify(CONFIG_BAUDRATE)
 #define CONFIG_SYS_DTB_ADDR 0x100
 #define MAX_DTB_SIZE_IN_RAM 0x7f00
 #if ((CONFIG_SYS_DTB_ADDR + MAX_DTB_SIZE_IN_RAM) > CONFIG_SYS_LOAD_ADDR)
@@ -477,7 +482,11 @@
  * This is default UART base address, but it can be changed through
  * set_serial_port() during run time
  */
+#if defined(CONFIG_AA1_MODULE_REV1)
 #define CONFIG_SYS_NS16550_COM1		SOCFPGA_UART0_ADDRESS
+#else
+#define CONFIG_SYS_NS16550_COM1		SOCFPGA_UART1_ADDRESS
+#endif
 #define CONFIG_SYS_BAUDRATE_TABLE {4800, 9600, 19200, 38400, 57600, 115200}
 #define CONFIG_SYS_NS16550_CLK		(cm_l4_sp_clk_hz)
 
