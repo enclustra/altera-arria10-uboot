@@ -88,8 +88,10 @@ CROSS_COMPILE := arm-altera-eabi-
 DEVICE_FAMILY := arria10
 ####################
 
-# BOOT_DEVICE = QSPI
-#
+ifeq ($(MERCURY_AA1_BOOTD),QSPI)
+BOOT_DEVICE = QSPI
+endif
+
 MKPIMAGE_HEADER_VERSION := 1
 
 MAKE_ARGS += CROSS_COMPILE=$(CROSS_COMPILE)
@@ -155,7 +157,7 @@ endif
 endif
 
 .PHONY: all	
-all: $(DTB) $(UBOOT.MKPIMAGE_BINARY_W_DTB)
+all: $(DTB) $(UBOOT.MKPIMAGE_BINARY_W_DTB) summary
 
 ifeq ($(ENABLE_BOOTLOADER_SIGNING),1)
 ifeq ($(ENABLE_BOOTLOADER_ENCRYPTION),1)
@@ -180,6 +182,28 @@ UBOOT.SECURE_BINARYx4 := $(patsubst %.abin,%-x4.abin,$(UBOOT.SECURE_BINARY))
 all: $(UBOOT.SECURE_BINARYx4)
 endif
 endif
+
+
+.PHONY: help
+help:
+	@echo "To build preloader for Mercury AA1 call:"
+	@echo "	- MMC boot:"
+	@echo "		make clean && make -j`nproc`"
+	@echo "	- QSPI boot:"
+	@echo "		make clean && MERCURY_AA1_BOOTD=QSPI make -j`nproc`"
+	@echo ""
+	@echo "To build for AA1 Rev1 it's necessary to set env variable:"
+	@echo "export MERCURY_AA1_REV1=1"
+
+.PHONY: summary
+summary: $(UBOOT.MKPIMAGE_BINARY_W_DTB)
+	@echo "#####################################"
+	@echo ""
+	@echo "U-Boot summary:"
+	@echo "BOOT DEVICE: $(BOOT_DEVICE)"
+	@echo "Config: $(SOCFPGA_BOARD_CONFIG)"
+	@echo "Devicetree: $(DTS)"
+
 
 ################
 # Build DTB
@@ -346,7 +370,7 @@ endif
 ################
 # Clean
 
-CLEAN_FILES += $(DTB) $(CONFIG) $(UBOOT.ELF) $(UBOOT.BINARY) $(UBOOT.BINARY_W_DTB) $(UBOOT.MKPIMAGE_BINARY_W_DTB) $(UBOOT.MKPIMAGE_ENCRYPTED_BINARY_W_DTB) $(UBOOT.MKPIMAGE_SIGNED_BINARY_W_DTB) $(UBOOT.SECURE_BINARY) $(UBOOT.SECURE_BINARYx4) pubkeyout.bin
+CLEAN_FILES += $(DTB) $(CONFIG) $(UBOOT.ELF) $(UBOOT.BINARY) $(UBOOT.BINARY_W_DTB) $(UBOOT.MKPIMAGE_BINARY_W_DTB) $(UBOOT.MKPIMAGE_ENCRYPTED_BINARY_W_DTB) $(UBOOT.MKPIMAGE_SIGNED_BINARY_W_DTB) $(UBOOT.SECURE_BINARY) $(UBOOT.SECURE_BINARYx4) pubkeyout.bin *.dtb
 
 .PHONY: clean
 clean:
