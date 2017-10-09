@@ -17,6 +17,7 @@
 #define L2X0_CTRL_EN				1
 #define PL310_AUX_CTRL_FULL_LINE_ZERO_MASK	(1 << 0)
 #define PL310_AUX_CTRL_ASSOCIATIVITY_MASK	(1 << 16)
+#define PL310_AUX_CTRL_SHARED_ATT_OVERRIDE_MASK	(1 << 22)
 #define PL310_AUX_CTRL_DATA_PREFETCH_MASK	(1 << 28)
 #define PL310_AUX_CTRL_INST_PREFETCH_MASK	(1 << 29)
 #define PL310_AUX_CTRL_EARLY_BRESP_MASK		(1 << 30)
@@ -82,5 +83,6 @@ void pl310_inval_all(void);
 void pl310_clean_inval_all(void);
 void pl310_inval_range(u32 start, u32 end);
 void pl310_clean_inval_range(u32 start, u32 end);
+void v7_outer_cache_configuration(void);
 
 #endif

@@ -20,5 +20,7 @@ config AA1_MODULE_REV1
 	default n
 	help
 		Enable this option when building for Mercury AA1 Rev1.
+config UBOOT_EXE_ON_FPGA
+	bool "Support socfpga_arria10_fpga"
 
 endif

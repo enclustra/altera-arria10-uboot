@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2014-2016 Altera Corporation <www.altera.com>
+ *  Copyright (C) 2014-2017 Intel Corporation <www.intel.com>
  *
  * SPDX-License-Identifier:	GPL-2.0
  */
@@ -15,6 +15,11 @@
 
 #define CONFIG_SOCFPGA_ARRIA10
 #define CONFIG_SOCFPGA_COMMON 1
+
+#ifndef CONFIG_UBOOT_EXE_ON_FPGA
+#define CONFIG_UBOOT_EXE_ON_FPGA	0
+#endif
+
 /* Undef to increase boot performance, if you want checksum
  checking on FPGA image, enable it */
 #undef CONFIG_CHECK_FPGA_DATA_CRC
@@ -52,25 +57,35 @@
 #define ENCLUSTRA_ETHADDR_DEFAULT   "00:07:ED:00:00:01"
 
 /* Cache options */
-#ifdef TEST_AT_ASIMOV
-#undef  CONFIG_SYS_DCACHE_OFF
-#else
 #define CONFIG_SYS_DCACHE_OFF
-#endif
 #define CONFIG_CMD_CACHE
 #define CONFIG_SYS_CACHELINE_SIZE	32
 #define CONFIG_SYS_L2_PL310
 #define CONFIG_SYS_PL310_BASE		SOCFPGA_MPUL2_ADDRESS
 
-/* base address for .text section. Ensure located start of OCRAM */
-#ifdef TEST_AT_ASIMOV
-/*#define CONFIG_SYS_TEXT_BASE		0xc0040000*/
-#define CONFIG_SYS_TEXT_BASE		0x10000000
+/* Base address for .text section. */
+/* Ensure located start of FPGA OCRAM */
+#if (1 == CONFIG_UBOOT_EXE_ON_FPGA)
+#define CONFIG_SYS_TEXT_BASE		0xc0000000
 #else
+/* Ensure located start of HPS OCRAM */
 #define CONFIG_SYS_TEXT_BASE		0xFFE00000
 #endif
+
 /* using linker to check all image sections fit OCRAM */
+#if (1 == CONFIG_UBOOT_EXE_ON_FPGA)
+/* Linker script for U-boot image boot from FPGA */
+#define CONFIG_SYS_LDSCRIPT \
+	"arch/arm/cpu/armv7/socfpga_arria10/u-boot-fpga.lds"
+/*
+ * Data segment relocated to HPS OCRAM, this prevent data segment corrupted
+ * at FPGA OCRAM when warm reset is triggered.
+ */
+#define CONFIG_FPGA_DATA_BASE	0xffe00000
+#define CONFIG_FPGA_DATA_MAX_SIZE	0x10000
+#else
 #define CONFIG_SYS_LDSCRIPT		$(TOPDIR)/$(CPUDIR)/$(SOC)/u-boot.lds
+#endif
 #define CONFIG_U_BOOT_BINARY_MAX_SIZE	(200 * 1024)
 
 /*
@@ -85,7 +100,8 @@
 /* Reserving 0x400 space at back of scratch RAM for debug info */
 #define CONFIG_SYS_INIT_RAM_SIZE	(256 * 1024)
 /* Reserving 16kB for MMU page table */
-#define SIZEOF_MMUPAGETABLE	(0x4000)
+/* Set to zero for saving memory space */
+#define SIZEOF_MMUPAGETABLE	(0)
 /* Stack pointer at on-chip RAM, leave 16kB behind for page table */
 #define CONFIG_SYS_INIT_SP_ADDR		(CONFIG_SYS_INIT_RAM_ADDR + \
 					 CONFIG_SYS_INIT_RAM_SIZE  - SIZEOF_MMUPAGETABLE)
@@ -509,15 +525,10 @@
 /* reload value when timer count to zero */
 #define TIMER_LOAD_VAL			0xFFFFFFFF
 /* Clocks source frequency to timer */
-#ifdef TEST_AT_ASIMOV
-/* Preloader and U-Boot need to know the clock source frequency from handoff*/
-#define CONFIG_TIMER_CLOCK_KHZ		(CONFIG_HPS_CLK_OSC1_HZ / 1000)
-#define CONFIG_SYS_TIMER_RATE		(CONFIG_HPS_CLK_OSC1_HZ)
-#else
 #define CONFIG_TIMER_CLOCK_HZ		(cm_l4_sys_free_clk_hz)
 #define CONFIG_TIMER_CLOCK_KHZ		(CONFIG_TIMER_CLOCK_HZ/1000)
 #define CONFIG_SYS_TIMER_RATE		(cm_l4_sys_free_clk_hz)
-#endif
+
 /* DesignWare timer is a countdown timer */
 #define CONFIG_SYS_TIMER_COUNTS_DOWN
 
@@ -554,9 +565,7 @@
 #define CONFIG_DW_AUTONEG
 #define CONFIG_PHYLIB
 #define CONFIG_PHY_MICREL
-#ifdef TEST_AT_ASIMOV
-#define CONFIG_PHY_MICREL_KSZ9021
-#endif
+
 /* phy */
 #define CONFIG_EPHY0_PHY_ADDR		7
 #endif	/* CONFIG_DESIGNWARE_ETH */
@@ -618,6 +627,8 @@
 #define CONFIG_SF_DEFAULT_SPEED		(10000000)
 #define CONFIG_SF_DEFAULT_MODE		SPI_MODE_3
 #define CONFIG_SPI_FLASH_QUAD		(1)
+#define CONFIG_SPI_FLASH_BUS        0
+#define CONFIG_SPI_FLASH_CS     0
 /* QSPI reference clock */
 #define CONFIG_CQSPI_REF_CLK		(cm_l4_main_clk_hz)
 /* QSPI page size and block size */

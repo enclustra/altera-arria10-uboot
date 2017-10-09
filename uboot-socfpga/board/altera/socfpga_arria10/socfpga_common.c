@@ -9,6 +9,7 @@
 #include <watchdog.h>
 #include <asm/arch/system_manager.h>
 #include <asm/arch/reset_manager.h>
+#include <asm/arch/misc.h>
 #include <phy.h>
 #include <micrel.h>
 #include <miiphy.h>
@@ -198,6 +199,9 @@ static struct eeprom_mem eeproms[] = {
  */
 int board_early_init_f(void)
 {
+	if (is_regular_boot())
+		gd->flags |= (GD_FLG_SILENT | GD_FLG_DISABLE_CONSOLE);
+
 	WATCHDOG_RESET();
 	return 0;
 }

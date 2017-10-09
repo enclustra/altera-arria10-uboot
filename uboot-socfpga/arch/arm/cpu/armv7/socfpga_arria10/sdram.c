@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2016 Altera Corporation <www.altera.com>
+ * Copyright (C) 2014-2017 Intel Corporation <www.intel.com>
  *
  * SPDX-License-Identifier:	GPL-2.0
  */
@@ -50,8 +50,9 @@ unsigned long irq_cnt_ecc_sdram = 0;
 #define CORE2SEQ_INT_REQ	0xF
 #define SEQ2CORE_INT_RESP_BIT	3
 
-#define DDR_ECC_DMA_SIZE	1500
+#define DDR_ECC_DMA_SIZE	2500
 #define DDR_READ_LATENCY_DELAY	40
+#define DDR_SIZE_2GB_HEX	0x80000000
 
 static const struct socfpga_ecc_hmc *socfpga_ecc_hmc_base =
 		(void *)SOCFPGA_SDR_ADDRESS;
@@ -403,16 +404,16 @@ int sdram_startup(void)
 	return ddr_setup();
 }
 
-u32 sdram_size_calc(void)
+unsigned long long sdram_size_calc(void)
 {
 	union dramaddrw_reg dramaddrw =
 		(union dramaddrw_reg)readl(&socfpga_io48_mmr_base->dramaddrw);
 
-	u32 size = (1 << (dramaddrw.cfg_cs_addr_width +
-		    dramaddrw.cfg_bank_group_addr_width +
-		    dramaddrw.cfg_bank_addr_width +
-		    dramaddrw.cfg_row_addr_width +
-		    dramaddrw.cfg_col_addr_width));
+	unsigned long long size = (1 << (dramaddrw.cfg_cs_addr_width +
+				dramaddrw.cfg_bank_group_addr_width +
+				dramaddrw.cfg_bank_addr_width +
+				dramaddrw.cfg_row_addr_width +
+				dramaddrw.cfg_col_addr_width));
 
 	size *= (2 << (readl(&socfpga_ecc_hmc_base->ddrioctrl) &
 		       ALT_ECC_HMC_OCP_DDRIOCTRL_IO_SIZE_MSK));
@@ -860,11 +861,16 @@ int ddr_calibration_sequence(void)
 	sdram_mmr_init();
 
 	/* assigning the SDRAM size */
-	gd->ram_size = sdram_size_calc();
+	unsigned long long size = sdram_size_calc();
 
 	/* If a weird value, use default Config size */
-	if (gd->ram_size <= 0)
+	/* Up to 2GB is supported, 2GB would be used if more than that */
+	if (size <= 0)
 		gd->ram_size = PHYS_SDRAM_1_SIZE;
+	else if (DDR_SIZE_2GB_HEX <= size)
+		gd->ram_size = DDR_SIZE_2GB_HEX;
+	else
+		gd->ram_size = (u32)size;
 
 	/* setup the dram info within bd */
 	dram_init_banksize();
@@ -915,8 +921,12 @@ int dram_init(void)
 
 	WATCHDOG_RESET();
 
-	if (is_external_fpga_config(gd->fdt_blob)) {
+	if (is_external_fpga_config(gd->fdt_blob) ||
+		CONFIG_UBOOT_EXE_ON_FPGA) {
 		ddr_calibration_sequence();
+#if defined(CONFIG_MMC)
+		mmc_initialize(gd->bd);
+#endif
 	} else {
 #if defined(CONFIG_MMC)
 		rval = cff_from_sdmmc_env();
@@ -928,6 +938,7 @@ int dram_init(void)
 #else
 #error "unsupported config"
 #endif
+
 		if (rval > 0) {
 			config_pins(gd->fdt_blob, "shared");
 
@@ -941,6 +952,17 @@ int dram_init(void)
 				config_pins(gd->fdt_blob, "fpga");
 				reset_deassert_fpga_connected_peripherals();
 			}
+
+			if (is_regular_boot()) {
+				udelay(10000);
+#if defined(CONFIG_CADENCE_QSPI_CFF)
+				qspi_software_reset();
+#endif
+				reset_cpu(0);
+			} else
+				gd->flags &= ~(GD_FLG_SILENT |
+				 GD_FLG_DISABLE_CONSOLE);
+
 			ddr_calibration_sequence();
 		}
 	}

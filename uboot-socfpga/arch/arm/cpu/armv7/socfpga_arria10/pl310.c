@@ -12,9 +12,7 @@
 static const struct pl310_regs *pl310_regs_base =
 	(void *)CONFIG_SYS_PL310_BASE;
 
-
-#ifndef CONFIG_SYS_L2CACHE_OFF
-void v7_outer_cache_enable(void)
+void v7_outer_cache_configuration(void)
 {
 	/* disable the L2 cache */
 	writel(0, &pl310_regs_base->pl310_ctrl);
@@ -24,7 +22,8 @@ void v7_outer_cache_enable(void)
 		PL310_AUX_CTRL_FULL_LINE_ZERO_MASK |
 		PL310_AUX_CTRL_DATA_PREFETCH_MASK |
 		PL310_AUX_CTRL_INST_PREFETCH_MASK |
-		PL310_AUX_CTRL_EARLY_BRESP_MASK);
+		PL310_AUX_CTRL_EARLY_BRESP_MASK |
+		PL310_AUX_CTRL_SHARED_ATT_OVERRIDE_MASK);
 
 	/* enable double linefills and prefetch for better performance */
 	setbits_le32(&pl310_regs_base->pl310_prefetch_ctrl,
@@ -40,6 +39,12 @@ void v7_outer_cache_enable(void)
 
 	/* invalidate the cache before enable */
 	v7_outer_cache_inval_all();
+}
+
+#ifndef CONFIG_SYS_L2CACHE_OFF
+void v7_outer_cache_enable(void)
+{
+	v7_outer_cache_configuration();
 
 	/* enable the L2 cache */
 	writel(0x1, &pl310_regs_base->pl310_ctrl);

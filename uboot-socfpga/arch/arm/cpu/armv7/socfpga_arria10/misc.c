@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2016 Altera Corporation <www.altera.com>
+ * Copyright (C) 2014-2017 Intel Corporation <www.intel.com>
  *
  * SPDX-License-Identifier:	GPL-2.0
  */
@@ -7,6 +7,7 @@
 #include <common.h>
 #include <asm/io.h>
 #include <asm/sections.h>
+#include <asm/arch/misc.h>
 #include <asm/arch/reset_manager.h>
 #include <asm/arch/system_manager.h>
 #include <asm/arch/interrupts.h>
@@ -21,6 +22,7 @@
 #include <phy.h>
 #include <serial.h>
 #include <ns16550.h>
+#include <spi_flash.h>
 
 #define PINMUX_UART0_TX_SHARED_IO_OFFSET_Q1_3	0x08
 #define PINMUX_UART0_TX_SHARED_IO_OFFSET_Q2_11	0x58
@@ -28,6 +30,10 @@
 #define PINMUX_UART1_TX_SHARED_IO_OFFSET_Q1_7	0x18
 #define PINMUX_UART1_TX_SHARED_IO_OFFSET_Q3_7	0x78
 #define PINMUX_UART1_TX_SHARED_IO_OFFSET_Q4_3	0x98
+#define QSPI_S25FL_SOFT_RESET_COMMAND	0x00f0ff82
+#define QSPI_N25_SOFT_RESET_COMMAND	0x00000001
+#define QSPI_NO_SOFT_RESET	0x00000000
+#define MPFE_RESET_RECOVERY_REG	7
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -35,6 +41,12 @@ static int find_peripheral_uart(const void *blob,
 	int child, const char *node_name);
 static int is_peripheral_uart_true(const void *blob,
 	int node, const char *child_name);
+
+static const struct socfpga_system_manager *system_manager_base =
+		(void *)SOCFPGA_SYSMGR_ADDRESS;
+
+static const struct socfpga_reset_manager *reset_manager_base =
+		(void *)SOCFPGA_RSTMGR_ADDRESS;
 
 /* FPGA programming support for SoC FPGA Cyclone V */
 Altera_desc altera_fpga[CONFIG_FPGA_COUNT] = {
@@ -380,3 +392,118 @@ unsigned int uart_com_port(const void *blob)
 
 	return shared_uart_com_port(blob);
 }
+
+/*
+ * This function set/unset magic number "0xd15ea5e" to
+ * handoff register isw_handoff[7] - 0xffd0624c
+ * This magic number is part of boot progress tracking
+ * and required by boot to initialize HW.
+ */
+void set_regular_boot(unsigned int set)
+{
+	unsigned int ret =
+			readl(&reset_manager_base->syswarmmask);
+	unsigned int s2f_ret =
+			readl(&system_manager_base->
+				isw_handoff[MPFE_RESET_RECOVERY_REG]);
+
+	if (set) {
+		if ((ret & ALT_RSTMGR_SYSWARMMASK_S2F_SET_MSK) &&
+			!is_early_release_fpga_config(gd->fdt_blob)) {
+			/* Masking s2f module reset */
+			writel(ret & (~ALT_RSTMGR_SYSWARMMASK_S2F_SET_MSK),
+				 &reset_manager_base->syswarmmask);
+
+			/*
+			 * Signal for restoring s2f user setting after
+			 * warm reset
+			 */
+			writel(REGULAR_BOOT_S2FWARMRESET_RESTORE_MAGIC,
+				&system_manager_base->
+					isw_handoff[MPFE_RESET_RECOVERY_REG]);
+		} else {
+			writel(REGULAR_BOOT_MAGIC,
+				&system_manager_base->
+					isw_handoff[MPFE_RESET_RECOVERY_REG]);
+		}
+	} else {
+		if ((s2f_ret == REGULAR_BOOT_S2FWARMRESET_RESTORE_MAGIC) &&
+			!is_early_release_fpga_config(gd->fdt_blob)) {
+			/* Unmasking s2f module reset */
+			writel(ret | ALT_RSTMGR_SYSWARMMASK_S2F_SET_MSK,
+				&reset_manager_base->syswarmmask);
+		}
+
+		writel(0, &system_manager_base->
+				isw_handoff[MPFE_RESET_RECOVERY_REG]);
+	}
+}
+
+/*
+ * This function is used to check whether
+ * handoff register isw_handoff[7] contains
+ * magic number "0xd15ea5e" or s2f warm reset
+ * restore magic number "0xd15ea5f".
+ */
+unsigned int is_regular_boot(void)
+{
+	unsigned int status;
+
+	status = readl(&system_manager_base->
+				isw_handoff[MPFE_RESET_RECOVERY_REG]);
+
+	if (status == REGULAR_BOOT_MAGIC ||
+		status == REGULAR_BOOT_S2FWARMRESET_RESTORE_MAGIC)
+		return 1;
+	else
+		return 0;
+}
+
+/*
+ * This function is used to enable/disable RAM boot with magic value and
+ * setting U-boot re-entrance location.
+ */
+void enable_ram_boot(unsigned int enable, unsigned long reentrance_loc)
+{
+	/*
+	 * Write magic value into magic register to unlock support for
+	 * issuing warm reset.
+	 */
+	writel(enable,
+		&system_manager_base->warmram_enable);
+	writel(reentrance_loc,
+			 &system_manager_base->warmram_execution);
+}
+
+#if defined(CONFIG_CADENCE_QSPI_CFF)
+/* This function is used to trigger software reset
+ * to the QSPI. On some boards, the QSPI reset may
+ * not be connected to the HPS warm reset.
+ */
+int qspi_software_reset(void)
+{
+	/* QSPI software reset command, for the case where
+		no HPS reset connected to QSPI reset */
+	struct spi_flash *flash;
+	/* Get the flash info */
+	flash = spi_flash_probe(CONFIG_SPI_FLASH_BUS, CONFIG_SPI_FLASH_CS,
+		 CONFIG_SF_DEFAULT_SPEED, SPI_MODE_3);
+
+	if (!(flash)) {
+		puts("SPI probe failed.\n");
+		return -1;
+	}
+
+	if (!memcmp(flash->name, "N25", 3))
+		writel(QSPI_N25_SOFT_RESET_COMMAND,
+			&system_manager_base->romcode_qspiresetcommand);
+	else if (!memcmp(flash->name, "S25FL", 5))
+		writel(QSPI_S25FL_SOFT_RESET_COMMAND,
+			&system_manager_base->romcode_qspiresetcommand);
+	else /* No software reset */
+		writel(QSPI_NO_SOFT_RESET,
+			&system_manager_base->romcode_qspiresetcommand);
+
+	return 0;
+}
+#endif

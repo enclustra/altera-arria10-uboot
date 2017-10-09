@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2016 Altera Corporation <www.altera.com>
+ * Copyright (C) 2014-2017 Intel Corporation <www.intel.com>
  *
  * SPDX-License-Identifier:	GPL-2.0
  */
@@ -359,6 +359,13 @@ int cff_from_flash(fpga_fs_info *fpga_fsinfo)
 
 	WATCHDOG_RESET();
 
+	if (is_regular_boot()) {
+		set_regular_boot(false);
+		/* Disable RAM boot */
+		enable_ram_boot(0, CONFIG_SYS_TEXT_BASE);
+		return 1;
+	}
+
 	/* transfer data to FPGA Manager */
 	fpgamgr_program_write((const long unsigned int *)buffer,
 		buffer_sizebytes);
@@ -381,6 +388,10 @@ int cff_from_flash(fpga_fs_info *fpga_fsinfo)
 
 	if (!strcmp(fpga_fsinfo->rbftype, "periph")) {
 		if (-ETIMEDOUT != fpgamgr_wait_early_user_mode()) {
+			set_regular_boot(true);
+			/* Enable RAM boot */
+			enable_ram_boot(RAM_BOOT_EN_MAGIC,
+				CONFIG_SYS_TEXT_BASE);
 			printf("FPGA: Early Release Succeeded.\n");
 		} else {
 			printf("FPGA: Failed to see Early Release.\n");
@@ -392,6 +403,13 @@ int cff_from_flash(fpga_fs_info *fpga_fsinfo)
 		status = fpgamgr_program_fini();
 		if (status)
 			return status;
+
+		if (!strcmp(fpga_fsinfo->rbftype, "combined")) {
+			/* Enable RAM boot */
+			enable_ram_boot(RAM_BOOT_EN_MAGIC,
+				CONFIG_SYS_TEXT_BASE);
+			set_regular_boot(true);
+		}
 	} else {
 		printf("Config Error: Unsupported FGPA raw binary type.\n");
 		return -1;

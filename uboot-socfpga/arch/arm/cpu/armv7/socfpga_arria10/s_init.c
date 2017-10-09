@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2016 Altera Corporation <www.altera.com>
+ * Copyright (C) 2014-2017 Intel Corporation <www.intel.com>
  *
  * SPDX-License-Identifier:	GPL-2.0
  */
@@ -14,6 +14,7 @@
 #include <asm/arch/ecc_ram.h>
 #include <asm/arch/misc.h>
 #include <asm/arch/sdram.h>
+#include <asm/pl310.h>
 #include <asm/sections.h>
 #include <fdtdec.h>
 #include <ns16550.h>
@@ -365,13 +366,39 @@ void s_init(void)
 	/* configure the Reset Manager */
 	reset_deassert_dedicated_peripherals();
 
-	if (is_external_fpga_config(gd->fdt_blob)) {
+	if (is_external_fpga_config(gd->fdt_blob) ||
+		CONFIG_UBOOT_EXE_ON_FPGA) {
 		while (!is_fpgamgr_user_mode())
 			;
+
+		if (is_regular_boot()) {
+			set_regular_boot(false);
+/* Skip RAM Boot when booting from FPGA */
+#if (CONFIG_UBOOT_EXE_ON_FPGA == 0)
+			/* Disable RAM boot */
+			enable_ram_boot(0, CONFIG_SYS_TEXT_BASE);
+#endif
+		}
+		else {
+			set_regular_boot(true);
+			udelay(10000);
+/* Skip RAM Boot when booting from FPGA */
+#if (CONFIG_UBOOT_EXE_ON_FPGA == 0)
+			/* Enable RAM boot */
+			enable_ram_boot(RAM_BOOT_EN_MAGIC,
+				 CONFIG_SYS_TEXT_BASE);
+#endif
+#if defined(CONFIG_CADENCE_QSPI_CFF)
+			qspi_software_reset();
+#endif
+			reset_cpu(0);
+		}
 
 		config_pins(gd->fdt_blob, "shared");
 		config_pins(gd->fdt_blob, "fpga");
 		reset_deassert_shared_connected_peripherals();
 		reset_deassert_fpga_connected_peripherals();
 	}
+
+	v7_outer_cache_configuration();
 }
