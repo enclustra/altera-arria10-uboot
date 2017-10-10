@@ -91,15 +91,20 @@ DEVICE_FAMILY := arria10
 ifeq ($(MERCURY_AA1_BOOTD),QSPI)
 BOOT_DEVICE = QSPI
 endif
+ifeq ($(MERCURY_AA1_BOOTD),EMMC)
+BOOT_DEVICE = EMMC
+endif
 
 MKPIMAGE_HEADER_VERSION := 1
 
 MAKE_ARGS += CROSS_COMPILE=$(CROSS_COMPILE)
 
 ifeq ($(MERCURY_AA1_REV1),1)
+DEVICETREE.EMMC = devicetree_rev1_emmc.dts
 DEVICETREE.QSPI = devicetree_rev1_qspi.dts
 DEVICETREE.SDMMC = devicetree_rev1.dts
 else
+DEVICETREE.EMMC = devicetree_emmc.dts
 DEVICETREE.QSPI = devicetree_qspi.dts
 DEVICETREE.SDMMC = devicetree.dts
 endif
@@ -135,10 +140,12 @@ ifeq ($(MERCURY_AA1_REV1),1)
 SOCFPGA_BOARD_CONFIG.QSPI = socfpga_$(DEVICE_FAMILY)_rev1_qspi_defconfig
 SOCFPGA_BOARD_CONFIG.NAND = socfpga_$(DEVICE_FAMILY)_rev1_nand_defconfig
 SOCFPGA_BOARD_CONFIG.SDMMC = socfpga_$(DEVICE_FAMILY)_rev1_config
+SOCFPGA_BOARD_CONFIG.EMMC = socfpga_$(DEVICE_FAMILY)_rev1_config
 else
 SOCFPGA_BOARD_CONFIG.QSPI = socfpga_$(DEVICE_FAMILY)_qspi_defconfig
 SOCFPGA_BOARD_CONFIG.NAND = socfpga_$(DEVICE_FAMILY)_nand_defconfig
 SOCFPGA_BOARD_CONFIG.SDMMC = socfpga_$(DEVICE_FAMILY)_config
+SOCFPGA_BOARD_CONFIG.EMMC = socfpga_$(DEVICE_FAMILY)_config
 endif
 SOCFPGA_BOARD_CONFIG := $(SOCFPGA_BOARD_CONFIG.$(BOOT_DEVICE))
 
@@ -196,6 +203,8 @@ help:
 	@echo "		make clean && make -j`nproc`"
 	@echo "	- QSPI boot:"
 	@echo "		make clean && MERCURY_AA1_BOOTD=QSPI make -j`nproc`"
+	@echo "	- EMMC boot:"
+	@echo "		make clean && MERCURY_AA1_BOOTD=EMMC make -j`nproc`"
 	@echo ""
 	@echo "To build for AA1 Rev1 it's necessary to set env variable:"
 	@echo "export MERCURY_AA1_REV1=1"
