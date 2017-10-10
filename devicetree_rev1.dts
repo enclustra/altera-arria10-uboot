@@ -159,8 +159,8 @@
 				<0x0000005c 0x00000004>,	/* Register: pinmux_shared_io_q2_12 */
 				<0x00000060 0x0000000f>,	/* Register: pinmux_shared_io_q3_1 */
 				<0x00000064 0x0000000f>,	/* Register: pinmux_shared_io_q3_2 */
-				<0x00000068 0x0000000f>,	/* Register: pinmux_shared_io_q3_3.gpio1.io2 */
-				<0x0000006c 0x0000000f>,	/* Register: pinmux_shared_io_q3_4.gpio1.io3 */
+				<0x00000068 0x0000000d>,	/* Register: pinmux_shared_io_q3_3 */
+				<0x0000006c 0x0000000d>,	/* Register: pinmux_shared_io_q3_4 */
 				<0x00000070 0x0000000f>,	/* Register: pinmux_shared_io_q3_5 */
 				<0x00000074 0x0000000f>,	/* Register: pinmux_shared_io_q3_6 */
 				<0x00000078 0x00000000>,	/* Register: pinmux_shared_io_q3_7 */
@@ -201,8 +201,8 @@
 				<0x00000030 0x0000000a>,	/* Register: pinmux_dedicated_io_13 */
 				<0x00000034 0x0000000a>,	/* Register: pinmux_dedicated_io_14 */
 				<0x00000038 0x0000000a>,	/* Register: pinmux_dedicated_io_15 */
-				<0x0000003c 0x0000000d>,	/* Register: pinmux_dedicated_io_16.uart1.tx */
-				<0x00000040 0x0000000d>;	/* Register: pinmux_dedicated_io_17.uart1.rx */
+				<0x0000003c 0x0000000f>,	/* Register: pinmux_dedicated_io_16 */
+				<0x00000040 0x0000000f>;	/* Register: pinmux_dedicated_io_17 */
 		};
 
 		/* Address Block: soc_3v_io48_pin_mux_OCP_SLV.i_io48_pin_mux_dedicated_io_grp */
@@ -227,7 +227,7 @@
 				<0x00000134 0x00090000>,	/* Register: configuration_dedicated_io_13 */
 				<0x00000138 0x00090000>,	/* Register: configuration_dedicated_io_14 */
 				<0x0000013c 0x00090000>,	/* Register: configuration_dedicated_io_15 */
-				<0x00000140 0x0008282a>,	/* Register: configuration_dedicated_io_16 */
+				<0x00000140 0x000a282a>,	/* Register: configuration_dedicated_io_16 */
 				<0x00000144 0x000a282a>;	/* Register: configuration_dedicated_io_17 */
 		};
 

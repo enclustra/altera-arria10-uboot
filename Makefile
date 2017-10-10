@@ -96,8 +96,13 @@ MKPIMAGE_HEADER_VERSION := 1
 
 MAKE_ARGS += CROSS_COMPILE=$(CROSS_COMPILE)
 
+ifeq ($(MERCURY_AA1_REV1),1)
+DEVICETREE.QSPI = devicetree_rev1_qspi.dts
+DEVICETREE.SDMMC = devicetree_rev1.dts
+else
 DEVICETREE.QSPI = devicetree_qspi.dts
 DEVICETREE.SDMMC = devicetree.dts
+endif
 DTS := $(DEVICETREE.$(BOOT_DEVICE))
 
 ifeq ($(DTS),)
