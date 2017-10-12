@@ -245,25 +245,7 @@
 #define CONFIG_SYS_HUSH_PARSER
 #define CONFIG_SYS_PROMPT_HUSH_PS2	"> "
 
-/*
- * Can't poll in semihosting; so turn off automatic boot command
- */
-#ifdef CONFIG_SEMIHOSTING
-#define CONFIG_BOOTCOMMAND ""
-#elif defined(CONFIG_MMC)
-#define CONFIG_BOOTCOMMAND "echo Booting on SD Card ...; mmc rescan && fatload mmc 0 ${bootscript_loadaddr} uboot.scr && source ${bootscript_loadaddr};"
-#define CONFIG_LINUX_DTB_NAME	devicetree.dtb
-#elif defined(CONFIG_CADENCE_QSPI_CFF)
-#define CONFIG_BOOTCOMMAND "echo Booting on QSPI Flash ...; sf probe && sf read ${bootscript_loadaddr} ${qspi_bootscript_offset} ${bootscript_size} && source ${bootscript_loadaddr};"
-#define CONFIG_LINUX_DTB_NAME	socfpga_arria10_socdk_qspi.dtb
-#elif defined(CONFIG_NAND_DENALI)
-#define CONFIG_BOOTCOMMAND "run nandrbfcore_rbf_prog; run nandload;" \
-	"run set_initswstate; run nandboot"
-#define CONFIG_LINUX_DTB_NAME	socfpga_arria10_socdk_nand.dtb
-#else
-#error "unsupported configuration"
-#endif
-
+#define CONFIG_BOOTCOMMAND "fpgabr 1; run ${bootmode}boot;"
 /*
  * arguments passed to the bootz command. The value of
  * CONFIG_BOOTARGS goes into the environment value "bootargs".
@@ -274,7 +256,8 @@
 #else
 #define LINUX_TTY "ttyS1"
 #endif
-#define CONFIG_BOOTARGS "console=" LINUX_TTY "," __stringify(CONFIG_BAUDRATE)
+
+#define CONFIG_BOOTARGS "console=" LINUX_TTY "," __stringify(CONFIG_BAUDRATE) " earlyprintk "
 #define CONFIG_SYS_DTB_ADDR 0x100
 #define MAX_DTB_SIZE_IN_RAM 0x7f00
 #if ((CONFIG_SYS_DTB_ADDR + MAX_DTB_SIZE_IN_RAM) > CONFIG_SYS_LOAD_ADDR)
@@ -291,7 +274,6 @@
 	"fdtimage=" __stringify(CONFIG_LINUX_DTB_NAME) "\0" \
 	"fdtimagesize=" __stringify(MAX_DTB_SIZE_IN_RAM) "\0" \
 	"fdt_high=0x2000000\0" \
-	"mmcloadcmd=fatload\0" \
 	"mmcloadpart=1\0" \
 	"mmcroot=/dev/mmcblk0p3\0" \
 	"qspi_upage_cs=2\0" \
@@ -329,32 +311,47 @@
     "bootscript_loadaddr=0x100000\0" \
     "initrd_high=0x3c00000\0" \
     "fdt_high=0x3c00000\0" \
-	"ramboot=setenv bootargs console=ttyS0,115200 " \
-        "earlyprintk rw root=/dev/ram; fpgabr 1;" \
+	"mmcargs=setenv bootargs " CONFIG_BOOTARGS	\
+		"root=/dev/mmcblk0p3 rw rootwait;\0"		\
+	"qspiargs=setenv bootargs " CONFIG_BOOTARGS	\
+		"root=/dev/mtdblock1 rw rootfstype=jffs2 rootwait;\0" \
+	"ramdiskargs=setenv bootargs " CONFIG_BOOTARGS	\
+		"root=/dev/ram rw\0" \
+	"ramboot=run ramdiskargs; "					\
         "bootm ${kernel_loadaddr} ${ramdisk_loadaddr} ${devicetree_loadaddr}\0" \
 	"mmcload=mmc rescan;" \
-		"${mmcloadcmd} mmc 0:${mmcloadpart} ${ramdisk_loadaddr} /uramdisk; " \
-		"${mmcloadcmd} mmc 0:${mmcloadpart} ${kernel_loadaddr} /uImage; " \
-		"${mmcloadcmd} mmc 0:${mmcloadpart} ${devicetree_loadaddr} /devicetree.dtb\0" \
-	"mmcboot=setenv bootargs " CONFIG_BOOTARGS \
-		" root=${mmcroot} rw rootwait;" \
-		"fpgabr 1;" \
-		"bootm ${loadaddr} - ${fdtaddr}\0" \
+		"fatload mmc 0:${mmcloadpart} ${ramdisk_loadaddr} /uramdisk; " \
+		"fatload mmc 0:${mmcloadpart} ${kernel_loadaddr} /uImage; " \
+		"fatload mmc 0:${mmcloadpart} ${devicetree_loadaddr} /devicetree.dtb\0" \
+												\
+	"sdboot=echo Booting on SD card...; "		\
+		"altera_set_storage MMC; "				\
+		"mmc rescan && "						\
+		"fatload mmc 0 ${bootscript_loadaddr} uboot.scr && " \
+		"source ${bootscript_loadaddr}\0"		\
+												\
+	"emmcboot=echo Booting on EMMC card...; "	\
+		"altera_set_storage EMMC; "				\
+		"mmc rescan && "						\
+		"fatload mmc 0 ${bootscript_loadaddr} uboot.scr && " \
+		"source ${bootscript_loadaddr}\0"		\
+												\
+	"qspiboot=echo Booting on QSPI Flash...; "	\
+		"altera_set_storage QSPI; "				\
+		"sf probe && "							\
+		"sf read ${bootscript_loadaddr} ${qspi_bootscript_offset} ${bootscript_size} && " \
+		"source ${bootscript_loadaddr}\0"		\
+												\
 	"netboot=dhcp ${bootimage};" \
 		"tftp ${fdtaddr} ${fdtimage} ; run ramboot\0" \
+												\
 	"qspiload=sf probe ${qspiloadcs};" \
 		"sf read ${loadaddr} ${qspibootimageaddr} ${bootimagesize};" \
 		"sf read ${fdtaddr} ${qspifdtaddr} ${fdtimagesize};\0" \
-	"qspiboot=setenv bootargs " CONFIG_BOOTARGS \
-		" root=${qspiroot} rw rootfstype=${qspirootfstype};" \
-		"fpgabr 1;" \
-		"bootz ${loadaddr} - ${fdtaddr}\0" \
 	"qspielfboot=sf probe ${qspiloadcs};" \
 		"sf read ${loadaddr} ${qspibootimageaddr} ${bootimagesize};" \
-		"fpgabr 1;" \
 		"bootelf ${loadaddr};\0" \
 	"mmcelfboot=mmc rescan;" \
-		"fpgabr 1;" \
 		"${mmcloadcmd} mmc 0:${mmcloadpart} ${loadaddr} ${elfimage};" \
 		"bootelf ${loadaddr};\0" \
 	"nandload=" \
@@ -362,7 +359,6 @@
 		"nand read ${fdtaddr} ${nandfdtaddr} ${fdtimagesize}\0" \
 	"nandboot=setenv bootargs " CONFIG_BOOTARGS \
 		" root=${nandroot} rw rootfstype=${nandrootfstype};" \
-		"fpgabr 1;" \
 		"bootz ${loadaddr} - ${fdtaddr}\0" \
 	"bootcmd=" CONFIG_BOOTCOMMAND "\0" \
 	"u-boot_swstate_reg=0xffd0620c\0" \
