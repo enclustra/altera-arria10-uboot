@@ -237,6 +237,7 @@ struct socfpga_system_manager {
 	volatile uint32_t  isw_handoff[8];
 	volatile uint32_t  romcode_bootromswstate[8];
 };
+#define SYSMGR_BOOTINFO_BSEL_SHIFT  12
 #endif
 
 
@@ -297,5 +298,8 @@ struct socfpga_system_manager {
 
 #define SYSMGR_SDMMC_CTRL_SET(smplsel, drvsel)	\
 	((drvsel << 0) & 0x7) | ((smplsel << 4) & 0x70)
+
+#define SYSMGR_GET_BOOTINFO_BSEL(bsel)      \
+	 (((bsel) >> SYSMGR_BOOTINFO_BSEL_SHIFT) & 7)
 
 #endif /* _SOCFPGA_SYSTEM_MANAGER_H_ */

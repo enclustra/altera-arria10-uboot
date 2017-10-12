@@ -21,6 +21,12 @@
 #define GPIO_OUT 0x1
 #define GPIO_IN 0x0
 
+struct bsel {
+	const char *mode;
+	const char *name;
+};
+
+extern struct bsel bsel_str[];
 void skip_relocation(void);
 int is_chosen_boolean_true(const void *blob, const char *name);
 int is_external_fpga_config(const void *blob);

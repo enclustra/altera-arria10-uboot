@@ -48,6 +48,8 @@ static const struct socfpga_system_manager *system_manager_base =
 static const struct socfpga_reset_manager *reset_manager_base =
 		(void *)SOCFPGA_RSTMGR_ADDRESS;
 
+static u32 bsel;
+
 /* FPGA programming support for SoC FPGA Cyclone V */
 Altera_desc altera_fpga[CONFIG_FPGA_COUNT] = {
 	{Altera_SoCFPGA, 	/* family */
@@ -56,6 +58,19 @@ Altera_desc altera_fpga[CONFIG_FPGA_COUNT] = {
 	NULL,		/* no device function table */
 	NULL,		/* base interface address specified in driver */
 	0}		/* no cookie implementation */
+};
+
+struct bsel bsel_str[] = {
+	{ "rsvd", "Reserved", },
+	{ "fpga", "FPGA (HPS2FPGA Bridge)", },
+	{ "nand", "NAND Flash (1.8V)", },
+	{ "nand", "NAND Flash (3.0V)", },
+	{ "sd", "SD/MMC External Transceiver (1.8V)", },
+	{ "sd", "SD/MMC Internal Transceiver (3.0V)", },
+	{ "qspi", "QSPI Flash (1.8V)", },
+	{ "qspi", "QSPI Flash (3.0V)", },
+	{ "emmc", "SD/eMMC Internal Transceiver (1.8V)", },
+	{ "emmc", "SD/eMMC Internal Transceiver (3.0V)", },
 };
 
 /* add device descriptor to FPGA device table */
@@ -70,14 +85,26 @@ void socfpga_fpga_add(void)
 /* Print CPU information */
 int print_cpuinfo(void)
 {
+	bsel =
+		SYSMGR_GET_BOOTINFO_BSEL(readl(&system_manager_base->bootinfo));
 	puts("CPU   : Altera SOCFPGA Arria 10 Platform\n");
+	printf("BOOT  : %s\n", bsel_str[bsel].name);
 	return 0;
 }
 
 int misc_init_r(void)
 {
+	bsel = SYSMGR_GET_BOOTINFO_BSEL(readl(&system_manager_base->bootinfo));
 	/* add device descriptor to FPGA device table */
 	socfpga_fpga_add();
+
+	// if bmode is mmc and gpio1.5==1 set bsel to emmc
+	if (bsel == 4 || bsel == 5) {
+		gpio_dir(1, 5, GPIO_IN);
+		if (gpio_get(1, 5) == 1)
+			bsel += 4;
+	}
+	setenv("bootmode", bsel_str[bsel].mode);
 	return 0;
 }
 
