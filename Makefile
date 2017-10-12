@@ -88,8 +88,10 @@ CROSS_COMPILE := arm-altera-eabi-
 DEVICE_FAMILY := arria10
 ####################
 
+BOOTSCR = mmcboot
 ifeq ($(MERCURY_AA1_BOOTD),QSPI)
 BOOT_DEVICE = QSPI
+BOOTSCR = qspiboot
 endif
 ifeq ($(MERCURY_AA1_BOOTD),EMMC)
 BOOT_DEVICE = EMMC
@@ -169,7 +171,7 @@ endif
 endif
 
 .PHONY: all	
-all: $(DTB) $(UBOOT.MKPIMAGE_BINARY_W_DTB) summary
+all: $(DTB) $(UBOOT.MKPIMAGE_BINARY_W_DTB) bscripts summary
 
 ifeq ($(ENABLE_BOOTLOADER_SIGNING),1)
 ifeq ($(ENABLE_BOOTLOADER_ENCRYPTION),1)
@@ -217,6 +219,7 @@ summary: $(UBOOT.MKPIMAGE_BINARY_W_DTB)
 	@echo "BOOT DEVICE: $(BOOT_DEVICE)"
 	@echo "Config: $(SOCFPGA_BOARD_CONFIG)"
 	@echo "Devicetree: $(DTS)"
+	@echo "Used bootscr: $(BOOTSCR)"
 
 
 ################
@@ -228,6 +231,21 @@ dtb: $(DTB)
 $(DTB): $(DTS)
 	$(info Building devicetree ${DST})
 	$(DTC) -O dtb -o $@ -I dts $(DTC_ARGS) $<
+
+
+################
+# Build buildscripts
+
+BSCR_DIR=bscripts
+
+.PHONY: bscripts
+bscripts:
+	pushd $(BSCR_DIR) && \
+	mkimage -A arm -O linux -T script -C none -a 0 -e 0 \
+		-n "U-Boot start script " -d $(BOOTSCR) uboot.scr && \
+	mkimage -A arm -O linux -T script -C none -a 0 -e 0 \
+		-n "U-Boot ramdisk start script " -d $(BOOTSCR)-ramdisk uboot_ramdisk.scr && \
+	popd
 
 ################
 # Untar
