@@ -1,8 +1,0 @@
-altera_set_storage MMC;
-mmc rescan || exit;
-fatload mmc 0 ${kernel_loadaddr} uImage || exit;
-fatload mmc 0 ${devicetree_loadaddr} devicetree.dtb || exit;
-
-setenv bootargs console=ttyS0,115200 root=/dev/mmcblk0p3 rw rootwait;
-fpgabr 1;
-bootm ${kernel_loadaddr} - ${devicetree_loadaddr};

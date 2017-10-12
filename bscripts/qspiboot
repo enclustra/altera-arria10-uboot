@@ -1,8 +1,10 @@
 altera_set_storage QSPI;
+
 sf probe || exit;
+
 sf read ${kernel_loadaddr} ${qspi_kernel_offset} ${kernel_size} || exit;
 sf read ${devicetree_loadaddr} ${qspi_devicetree_offset} ${devicetree_size} || exit;
 
-setenv bootargs console=ttyS1,115200 earlyprintk rw root=/dev/mtdblock1 rw rootfstype=jffs2;
-fpgabr 1;
+run qspiargs;
+
 bootm ${kernel_loadaddr} - ${devicetree_loadaddr};
