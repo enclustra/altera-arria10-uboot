@@ -1079,6 +1079,10 @@ static int mmc_startup(struct mmc *mmc)
 	mmc->card_caps &= mmc->cfg->host_caps;
 
 	if (IS_SD(mmc)) {
+#ifdef MMC_QUIRK_SD_4B_CAPABLE
+		mmc->card_caps |= MMC_MODE_4BIT;
+		mmc->card_caps &= ~MMC_MODE_8BIT;
+#endif
 		if (mmc->card_caps & MMC_MODE_4BIT) {
 			cmd.cmdidx = MMC_CMD_APP_CMD;
 			cmd.resp_type = MMC_RSP_R1;
@@ -1127,6 +1131,10 @@ static int mmc_startup(struct mmc *mmc)
 			8, 4, 8, 4, 1,
 		};
 
+#ifdef MMC_QUIRK_MMC_8B_CAPABLE
+		mmc->card_caps |= MMC_MODE_8BIT;
+		mmc->card_caps &= ~MMC_MODE_4BIT;
+#endif
 		for (idx=0; idx < ARRAY_SIZE(ext_csd_bits); idx++) {
 			unsigned int extw = ext_csd_bits[idx];
 
@@ -1135,7 +1143,7 @@ static int mmc_startup(struct mmc *mmc)
 			 * this bus width, if it's more than 1
 			 */
 			if (extw != EXT_CSD_BUS_WIDTH_1 &&
-					!(mmc->cfg->host_caps & ext_to_hostcaps[extw]))
+					!(mmc->card_caps & ext_to_hostcaps[extw]))
 				continue;
 
 			err = mmc_switch(mmc, EXT_CSD_CMD_SET_NORMAL,

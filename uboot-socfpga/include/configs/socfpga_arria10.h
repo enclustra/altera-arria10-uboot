@@ -600,6 +600,9 @@
 #define CONFIG_SOCFPGA_DWMMC_FIFO_DEPTH	1024
 /* using smaller max blk cnt to avoid flooding the limited stack we have */
 #define CONFIG_SOCFPGA_DWMMC_BUS_HZ	CONFIG_HPS_CLK_SDMMC_HZ
+/* define quirks necessary for proper MMC bus width switching */
+#define MMC_QUIRK_SD_4B_CAPABLE
+#define MMC_QUIRK_MMC_8B_CAPABLE
 /* requird for dw_mmc driver */
 #define CONFIG_BOUNCE_BUFFER
 #define CONFIG_BOOT_FLASH_TYPE "mmc"
