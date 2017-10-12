@@ -1,0 +1,14 @@
+altera_set_storage EMMC;
+mmc rescan || exit;
+
+fatload mmc 0 ${ramdisk_loadaddr} uramdisk || exit;
+fatload mmc 0 ${kernel_loadaddr} uImage || exit;
+fatload mmc 0 ${devicetree_loadaddr} devicetree.dtb || exit;
+
+run ramdiskargs;
+
+# update the MMC bus width for EMMC
+fdt addr ${devicetree_loadaddr};
+fdt set /soc/dwmmc0@ff808000 bus-width <0x00000008>
+
+bootm ${kernel_loadaddr} ${ramdisk_loadaddr} ${devicetree_loadaddr};

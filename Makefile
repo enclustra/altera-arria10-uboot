@@ -95,6 +95,7 @@ BOOTSCR = qspiboot
 endif
 ifeq ($(MERCURY_AA1_BOOTD),EMMC)
 BOOT_DEVICE = EMMC
+BOOTSCR = emmcboot
 endif
 
 MKPIMAGE_HEADER_VERSION := 1
