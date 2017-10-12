@@ -1,3 +1,7 @@
 config MMC
         bool "Include MMC driver"
         default n
+
+config SOCFPGA_DWMMC_BUS_WIDTH
+        int "DWMMC bus width"
+        default 4
