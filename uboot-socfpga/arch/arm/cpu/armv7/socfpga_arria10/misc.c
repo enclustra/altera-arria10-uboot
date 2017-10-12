@@ -507,3 +507,39 @@ int qspi_software_reset(void)
 	return 0;
 }
 #endif
+
+int gpio_get(int gpio_chip, int gpio_nr)
+{
+	const u32 offs = (ALTERA_GPIO_BASE + (gpio_chip * 0x100) +
+			  GPIO_EXT_OFFS);
+	return (readl(offs) >> gpio_nr) & 0x1;
+}
+
+void gpio_set(int gpio_chip, int gpio_nr, int value)
+{
+	u32 reg, offs;
+
+	offs = ALTERA_GPIO_BASE + (gpio_chip * 0x100);
+	reg = readl(offs + GPIO_DATA_OFFS);
+	if (value)
+		reg |= (1 << gpio_nr);
+	else
+		reg &= ~(1 << gpio_nr);
+
+	writel(reg, offs + GPIO_DATA_OFFS);
+}
+
+void gpio_dir(int gpio_chip, int gpio_nr, int dir)
+{
+	u32 reg, offs;
+
+	offs = ALTERA_GPIO_BASE + (gpio_chip * 0x100);
+	reg = readl(offs + GPIO_DIR_OFFS);
+	if (dir)
+		reg |= (1 << gpio_nr);
+	else
+		reg &= ~(1 << gpio_nr);
+
+	writel(reg, offs + GPIO_DIR_OFFS);
+}
+
