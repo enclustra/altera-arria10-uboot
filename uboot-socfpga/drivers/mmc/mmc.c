@@ -1319,12 +1319,6 @@ int mmc_start_init(struct mmc *mmc)
 	if (mmc->has_init)
 		return 0;
 
-	/* made sure it's not NULL earlier */
-	err = mmc->cfg->ops->init(mmc);
-
-	if (err)
-		return err;
-
 	mmc_set_bus_width(mmc, 1);
 	mmc_set_clock(mmc, 1);
 
