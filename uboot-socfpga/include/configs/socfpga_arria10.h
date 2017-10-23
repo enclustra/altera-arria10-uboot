@@ -216,13 +216,13 @@
 #define QSPI_BOOTSCRIPT_OFFSET      0x00180000  // Storage for Uboot boot script
 #define QSPI_LINUX_OFFSET       0x00200000  // Storage for Linux Kernel
 #define QSPI_BITSTREAM_OFFSET   0x00720000
-#define QSPI_ROOTFS_OFFSET      0x01320000  // Storage for Linux Root FS (JFFS)
+#define QSPI_ROOTFS_OFFSET      0x01340000  // Storage for Linux Root FS (JFFS)
 #define QSPI_PRELOADER_SIZE     0x00100000  // size 1 MiB
 #define QSPI_BITSTREAM_SIZE     0x00c00000  // size 12MiB
 #define QSPI_DTB_SIZE           0x00080000  // size 512 KiB
 #define QSPI_BOOTSCRIPT_SIZE        0x00040000  // size 512 KiB
 #define QSPI_LINUX_SIZE         0x00740000  // size 5 MB
-#define QSPI_ROOTFS_SIZE        0x03000000  // size 48 MiB
+#define QSPI_ROOTFS_SIZE        0x2cc0000  // size 45MB
 #define QSPI_RAMDISK_SIZE       0x1000000  // size 16MB MiB
 
 /*
