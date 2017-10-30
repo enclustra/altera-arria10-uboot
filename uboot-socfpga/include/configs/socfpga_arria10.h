@@ -268,11 +268,6 @@
 	"verify=y\0" \
 	"loadaddr=" __stringify(CONFIG_SYS_LOAD_ADDR) "\0" \
 	"fdtaddr=" __stringify(CONFIG_SYS_DTB_ADDR) "\0" \
-	"bootimage=uImage\0" \
-	"elfimage=bare-metal.axf\0" \
-	"bootimagesize=0x5F0000\0" \
-	"fdtimage=" __stringify(CONFIG_LINUX_DTB_NAME) "\0" \
-	"fdtimagesize=" __stringify(MAX_DTB_SIZE_IN_RAM) "\0" \
 	"fdt_high=0x2000000\0" \
 	"mmcloadpart=1\0" \
 	"mmcroot=/dev/mmcblk0p3\0" \
@@ -295,13 +290,6 @@
 	"bitstream_size=" __stringify(QSPI_BITSTREAM_SIZE) "\0" \
 	"qspiroot=/dev/mtdblock1\0" \
 	"qspirootfstype=jffs2\0" \
-	"nandbootimageaddr=0x120000\0" \
-	"nandfdtaddr=0x100000\0" \
-	"nandrbfcoreimage=0x820000\0" \
-	"nandroot=/dev/mtdblock1\0" \
-	"nandrootfstype=jffs2\0" \
-	"nandrbfcore_rbf_prog=" \
-		"fpga loadfs 0 nand 0:0 ${nandrbfcoreimage} core\0" \
     "ramdisk_loadaddr=0x4000000\0" \
     "rootfs_loadaddr=0x4000000\0" \
     "bitstream_loadaddr=0x3600000\0" \
@@ -354,12 +342,6 @@
 	"mmcelfboot=mmc rescan;" \
 		"${mmcloadcmd} mmc 0:${mmcloadpart} ${loadaddr} ${elfimage};" \
 		"bootelf ${loadaddr};\0" \
-	"nandload=" \
-		"nand read ${loadaddr} ${nandbootimageaddr} ${bootimagesize};" \
-		"nand read ${fdtaddr} ${nandfdtaddr} ${fdtimagesize}\0" \
-	"nandboot=setenv bootargs " CONFIG_BOOTARGS \
-		" root=${nandroot} rw rootfstype=${nandrootfstype};" \
-		"bootz ${loadaddr} - ${fdtaddr}\0" \
 	"bootcmd=" CONFIG_BOOTCOMMAND "\0" \
 	"u-boot_swstate_reg=0xffd0620c\0" \
 	"u-boot_image_valid=0x49535756\0" \
