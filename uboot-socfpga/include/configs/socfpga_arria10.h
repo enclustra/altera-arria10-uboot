@@ -268,6 +268,13 @@
 	"verify=y\0" \
 	"loadaddr=" __stringify(CONFIG_SYS_LOAD_ADDR) "\0" \
 	"fdtaddr=" __stringify(CONFIG_SYS_DTB_ADDR) "\0" \
+	"preloader_image=uboot-mkpimage.bin\0" \
+	"bitstream_image=fpga.rbf.img\0" \
+	"bootscript_image=uboot.scr\0" \
+	"kernel_image=uImage\0" \
+	"devicetree_image=devicetree.dtb\0" \
+	"uramdisk_image=uramdisk\0" \
+	"rootfs_image=rootfs.jffs2\0" \
 	"fdt_high=0x2000000\0" \
 	"mmcloadpart=1\0" \
 	"mmcroot=/dev/mmcblk0p3\0" \
