@@ -211,19 +211,19 @@
 #define CONFIG_CMD_BOOTZ
 
 /* QSPI env defines */
-#define QSPI_PRELOADER_OFFSET       0x00000000  // Storage for Preloader
-#define QSPI_DTB_OFFSET         0x00100000  // Storage for Linux Devicetree
-#define QSPI_BOOTSCRIPT_OFFSET      0x00180000  // Storage for Uboot boot script
-#define QSPI_LINUX_OFFSET       0x00200000  // Storage for Linux Kernel
-#define QSPI_BITSTREAM_OFFSET   0x00720000
-#define QSPI_ROOTFS_OFFSET      0x01340000  // Storage for Linux Root FS (JFFS)
-#define QSPI_PRELOADER_SIZE     0x00100000  // size 1 MiB
-#define QSPI_BITSTREAM_SIZE     0x00c00000  // size 12MiB
-#define QSPI_DTB_SIZE           0x00080000  // size 512 KiB
-#define QSPI_BOOTSCRIPT_SIZE        0x00040000  // size 512 KiB
-#define QSPI_LINUX_SIZE         0x00740000  // size 5 MB
-#define QSPI_ROOTFS_SIZE        0x2cc0000  // size 45MB
-#define QSPI_RAMDISK_SIZE       0x1000000  // size 16MB MiB
+#define QSPI_PRELOADER_OFFSET	0x00000000  // Storage for Preloader
+#define QSPI_BITSTREAM_OFFSET	0x100000	// FPGA Bitstream
+#define QSPI_DTB_OFFSET			0xd40000  // Storage for Linux Devicetree
+#define QSPI_BOOTSCRIPT_OFFSET	0xd80000  // Storage for Uboot boot script
+#define QSPI_LINUX_OFFSET		0xdc0000  // Storage for Linux Kernel
+#define QSPI_ROOTFS_OFFSET		0x01340000  // Storage for Linux Root FS (JFFS)
+#define QSPI_PRELOADER_SIZE		0x00100000  // size 1 MiB
+#define QSPI_BITSTREAM_SIZE		0x00c00000  // size 12MiB
+#define QSPI_DTB_SIZE			0x00040000  // size 256 KiB
+#define QSPI_BOOTSCRIPT_SIZE	0x00040000  // size 256 KiB
+#define QSPI_LINUX_SIZE			0x00580000  // size 5.5 MB
+#define QSPI_ROOTFS_SIZE		0x02cc0000  // size 44.75MB
+#define QSPI_RAMDISK_SIZE		0x01000000  // size 16MB MiB
 
 /*
  * Environment setup
@@ -621,9 +621,9 @@
 #define CONFIG_CQSPI_TSLCH_NS		(20)
 #define CONFIG_CQSPI_DECODER		(0)
 #ifdef CONFIG_CADENCE_QSPI_CFF
-#define CONFIG_QSPI_RBF_ADDR 		0x720000
+#define CONFIG_QSPI_RBF_ADDR 		0x100000
 #define CONFIG_ENV_IS_IN_SPI_FLASH
-#define CONFIG_ENV_OFFSET		0x710000
+#define CONFIG_ENV_OFFSET		0xd00000
 #define CONFIG_ENV_SIZE			(4 * 1024)
 #define CONFIG_ENV_SECT_SIZE		(4 * 1024)
 #define CONFIG_BOOT_FLASH_TYPE "qspi"
