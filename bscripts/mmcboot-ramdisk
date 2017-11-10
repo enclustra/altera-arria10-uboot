@@ -1,10 +1,55 @@
+if test ${linux_storage} = ""; then
+    setenv linux_storage MMC
+fi
+
+if test ${use_ramdisk} = ""; then
+    setenv use_ramdisk 1
+fi
+
+
 altera_set_storage MMC;
 mmc rescan || exit;
 
-fatload mmc 0 ${ramdisk_loadaddr} uramdisk || exit;
+if test ${linux_storage} = "QSPI"; then
+    setenv devicetree_filename devicetree.qspi.dtb
+else
+    setenv devicetree_filename devicetree.dtb
+fi
+
+if test ${use_ramdisk} -ne 0; then
+    fatload mmc 0 ${ramdisk_loadaddr} uramdisk || exit;
+fi
 fatload mmc 0 ${kernel_loadaddr} uImage || exit;
-fatload mmc 0 ${devicetree_loadaddr} devicetree.dtb || exit;
+fatload mmc 0 ${devicetree_loadaddr} ${devicetree_filename} || exit;
 
-run ramdiskargs;
+if test ${use_ramdisk} -ne 0; then
+    run ramdiskargs;
+else
+    if test ${linux_storage} = "QSPI"; then
+        run qspiargs;
+    else
+        run mmcargs;
+    fi
+fi
 
-bootm ${kernel_loadaddr} ${ramdisk_loadaddr} ${devicetree_loadaddr};
+if test ${linux_storage} = "EMMC"; then
+    # update the MMC bus width for EMMC
+    fdt addr ${devicetree_loadaddr};
+    fdt set /soc/dwmmc0@ff808000 bus-width <0x00000008>
+
+    # set SD card timings to MMC
+    fdt rm /soc/dwmmc0@ff808000 cap-sd-highspeed;
+    fdt resize;
+    fdt set /soc/dwmmc0@ff808000 cap-mmc-highspeed <1>;
+fi
+
+echo "Switching storage to ${linux_storage}"
+altera_set_storage ${linux_storage}
+
+if test ${use_ramdisk} -ne 0; then
+    echo "Booting with ramdisk"
+    bootm ${kernel_loadaddr} ${ramdisk_loadaddr} ${devicetree_loadaddr};
+else
+    echo "Booting with rootfs"
+    bootm ${kernel_loadaddr} - ${devicetree_loadaddr};
+fi
