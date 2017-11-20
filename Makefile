@@ -241,12 +241,11 @@ BSCR_DIR=bscripts
 
 .PHONY: bscripts
 bscripts:
-	pushd $(BSCR_DIR) && \
+	cd $(BSCR_DIR) && \
 	mkimage -A arm -O linux -T script -C none -a 0 -e 0 \
 		-n "U-Boot start script " -d $(BOOTSCR) uboot.scr && \
 	mkimage -A arm -O linux -T script -C none -a 0 -e 0 \
-		-n "U-Boot ramdisk start script " -d $(BOOTSCR)-ramdisk uboot_ramdisk.scr && \
-	popd
+		-n "U-Boot ramdisk start script " -d $(BOOTSCR)-ramdisk uboot_ramdisk.scr
 
 ################
 # Untar
