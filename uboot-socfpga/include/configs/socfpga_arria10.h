@@ -246,6 +246,7 @@
 #define CONFIG_SYS_PROMPT_HUSH_PS2	"> "
 
 #define CONFIG_BOOTCOMMAND "fpgabr 1; run ${bootmode}boot;"
+#define CONFIG_PREBOOT
 /*
  * arguments passed to the bootz command. The value of
  * CONFIG_BOOTARGS goes into the environment value "bootargs".
@@ -306,6 +307,17 @@
     "bootscript_loadaddr=0x100000\0" \
     "initrd_high=0x3c00000\0" \
     "fdt_high=0x3c00000\0" \
+	"uenvtxt_loadaddr=0x2000000\0" \
+	"uenvtxt=uEnv.txt\0" \
+	"loaduenvtxt=fatload mmc 0 ${uenvtxt_loadaddr} ${uenvtxt}\0" \
+	"importuenvtxt=echo Importing environment from SD ...; " \
+		"env import -t ${uenvtxt_loadaddr} $filesize\0" \
+	"sd_uenvtxt_exists=test -e mmc 0 ${uenvtxt}\0" \
+	"preboot=mmc rescan; if run sd_uenvtxt_exists; " \
+		"then if run loaduenvtxt; "\
+			"then run importuenvtxt; " \
+			"fi; " \
+		"fi;\0" \
 	"mmcargs=setenv bootargs " CONFIG_BOOTARGS	\
 		"root=/dev/mmcblk0p3 rw rootwait;\0"		\
 	"qspiargs=setenv bootargs " CONFIG_BOOTARGS	\
@@ -390,8 +402,6 @@
 /* Enable overwrite of previous console environment settings */
 #define CONFIG_SYS_CONSOLE_ENV_OVERWRITE
 /* Environment from flash not allowed as not secure */
-/* Environtment import command not allowed as not secure too */
-#undef CONFIG_CMD_IMPORTENV
 
 /*
  * Console setup
