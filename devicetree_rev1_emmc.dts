@@ -76,7 +76,7 @@
 			cntr9clk-src = <0>;	/* Field: cntr9clk.src */
 			cntr15clk-cnt = <900>;	/* Field: cntr15clk.cnt */
 			nocdiv-l4mainclk = <0>;	/* Field: nocdiv.l4mainclk */
-			nocdiv-l4mpclk = <1>;	/* Field: nocdiv.l4mpclk */
+			nocdiv-l4mpclk = <0>;	/* Field: nocdiv.l4mpclk */
 			nocdiv-l4spclk = <2>;	/* Field: nocdiv.l4spclk */
 			nocdiv-csatclk = <0>;	/* Field: nocdiv.csatclk */
 			nocdiv-cstraceclk = <0>;	/* Field: nocdiv.cstraceclk */

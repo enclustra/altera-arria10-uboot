@@ -60,7 +60,7 @@
 			cntr9clk-src = <0x0>;
 			cntr15clk-cnt = <0x384>;
 			nocdiv-l4mainclk = <0x0>;
-			nocdiv-l4mpclk = <0x1>;
+			nocdiv-l4mpclk = <0x0>;
 			nocdiv-l4spclk = <0x2>;
 			nocdiv-csatclk = <0x0>;
 			nocdiv-cstraceclk = <0x0>;
