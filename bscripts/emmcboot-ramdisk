@@ -1,19 +1,4 @@
-altera_set_storage EMMC;
-mmc rescan || exit;
+#define USE_RAMDISK_DEFAULT 1
 
-fatload mmc 0 ${ramdisk_loadaddr} uramdisk || exit;
-fatload mmc 0 ${kernel_loadaddr} uImage || exit;
-fatload mmc 0 ${devicetree_loadaddr} devicetree.dtb || exit;
+#include "emmcboot"
 
-run ramdiskargs;
-
-# update the MMC bus width for EMMC
-fdt addr ${devicetree_loadaddr};
-fdt set /soc/dwmmc0@ff808000 bus-width <0x00000008>
-
-# set SD card timings to MMC
-fdt rm /soc/dwmmc0@ff808000 cap-sd-highspeed;
-fdt resize;
-fdt set /soc/dwmmc0@ff808000 cap-mmc-highspeed <1>;
-
-bootm ${kernel_loadaddr} ${ramdisk_loadaddr} ${devicetree_loadaddr};

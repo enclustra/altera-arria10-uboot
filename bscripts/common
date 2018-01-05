@@ -1,0 +1,56 @@
+#ifndef USE_RAMDISK_DEFAULT
+#define USE_RAMDISK_DEFAULT 0
+#endif
+
+#define VALID_STORAGES "EMMC MMC QSPI"
+
+/* default value for use_ramdisk */
+test -z "${use_ramdisk}" && setenv use_ramdisk USE_RAMDISK_DEFAULT;
+if test -z "${linux_storage}"; then
+    /* default value: the same storage from which this script was loaded */
+    setenv linux_storage BOOT_STORAGE;
+else
+    for i in VALID_STORAGES; do test "${linux_storage}" = "$i" && valid=1; done
+    if test "$valid" -ne 1; then
+        echo "Error: 'linux_storage' has invalid value. Allowed values:" VALID_STORAGES;
+        exit;
+    fi
+fi
+
+/* Set bootargs and load ramdisk if needed */
+if test "${use_ramdisk}" -gt 0; then
+    LOAD_RAMDISK_CMD || exit;
+    run ramdiskargs;
+else
+    if test "${linux_storage}" = "QSPI"; then
+        run qspiargs;
+    else
+        run mmcargs;
+    fi
+fi
+
+echo "Switching storage to ${linux_storage}"
+altera_set_storage ${linux_storage};
+/* Adjust devicetree for eMMC and QSPI */
+fdt addr ${devicetree_loadaddr};
+if test "${linux_storage}" = "EMMC"; then
+    /* update the MMC bus width for EMMC */
+    fdt set /soc/dwmmc0@ff808000 bus-width <0x00000008>;
+    /* set SD card timings to MMC */
+    fdt rm /soc/dwmmc0@ff808000 cap-sd-highspeed;
+    fdt resize;
+    fdt set /soc/dwmmc0@ff808000 cap-mmc-highspeed <1>;
+elif test "${linux_storage}" = "QSPI"; then
+    /* disable MMC bus and enable QSPI */
+    fdt set /soc/spi@ff809000 status "okay";
+    fdt set /soc/dwmmc0@ff808000 status "disabled";
+fi
+
+if test "${use_ramdisk}" -gt 0; then
+    echo "Booting with ramdisk";
+    bootm ${kernel_loadaddr} ${ramdisk_loadaddr} ${devicetree_loadaddr};
+else
+    echo "Booting with rootfs";
+    bootm ${kernel_loadaddr} - ${devicetree_loadaddr};
+fi
+
