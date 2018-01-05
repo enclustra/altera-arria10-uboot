@@ -265,6 +265,30 @@
 #error "MAX_DTB_SIZE_IN_RAM is too big. It will overwrite zImage in memory."
 #endif
 
+
+#if defined(CONFIG_MMC)
+
+/* (e)MMC build */
+#define ENV_PREBOOT_LOAD_UENV_TXT \
+	"uenvtxt=uEnv.txt\0" \
+	"uenvtxt_loadaddr=0x2000000\0" \
+	"sd_set_storage=altera_set_storage MMC; mmc rescan\0" \
+	"emmc_set_storage=altera_set_storage EMMC; mmc rescan\0" \
+	"loaduenvtxt=test -e mmc 0 ${uenvtxt} && fatload mmc 0 ${uenvtxt_loadaddr} ${uenvtxt}\0" \
+	"importuenvtxt=echo Importing environment from ${bootmode} ...; " \
+		"env import -t ${uenvtxt_loadaddr} $filesize\0" \
+	"preboot=run ${bootmode}_set_storage; " \
+		"run loaduenvtxt && run importuenvtxt\0"
+
+#elif defined(CONFIG_CADENCE_QSPI)
+
+/* QSPI build */
+#define ENV_PREBOOT_LOAD_UENV_TXT
+
+#else
+#define ENV_PREBOOT_LOAD_UENV_TXT
+#endif
+
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	"verify=y\0" \
 	"loadaddr=" __stringify(CONFIG_SYS_LOAD_ADDR) "\0" \
@@ -307,17 +331,7 @@
     "bootscript_loadaddr=0x100000\0" \
     "initrd_high=0x3c00000\0" \
     "fdt_high=0x3c00000\0" \
-	"uenvtxt_loadaddr=0x2000000\0" \
-	"uenvtxt=uEnv.txt\0" \
-	"loaduenvtxt=fatload mmc 0 ${uenvtxt_loadaddr} ${uenvtxt}\0" \
-	"importuenvtxt=echo Importing environment from SD ...; " \
-		"env import -t ${uenvtxt_loadaddr} $filesize\0" \
-	"sd_uenvtxt_exists=test -e mmc 0 ${uenvtxt}\0" \
-	"preboot=mmc rescan; if run sd_uenvtxt_exists; " \
-		"then if run loaduenvtxt; "\
-			"then run importuenvtxt; " \
-			"fi; " \
-		"fi;\0" \
+	ENV_PREBOOT_LOAD_UENV_TXT \
 	"mmcargs=setenv bootargs " CONFIG_BOOTARGS	\
 		"root=/dev/mmcblk0p3 rw rootwait;\0"		\
 	"qspiargs=setenv bootargs " CONFIG_BOOTARGS	\
