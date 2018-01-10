@@ -266,7 +266,7 @@
 #endif
 
 
-#if defined(CONFIG_MMC)
+#if defined(CONFIG_MMC_CFF)
 
 /* (e)MMC build */
 #define ENV_PREBOOT_LOAD_UENV_TXT \
@@ -280,7 +280,7 @@
 	"preboot=run ${bootmode}_set_storage; " \
 		"run loaduenvtxt && run importuenvtxt\0"
 
-#elif defined(CONFIG_CADENCE_QSPI)
+#elif defined(CONFIG_CADENCE_QSPI_CFF)
 
 /* QSPI build */
 #define ENV_PREBOOT_LOAD_UENV_TXT
@@ -590,11 +590,6 @@
  */
 
 #ifdef CONFIG_MMC
-
-#define CONFIG_ENV_IS_IN_MMC
-#define CONFIG_SYS_MMC_ENV_DEV		0/* device 0 */
-#define CONFIG_ENV_OFFSET		512/* just after the MBR */
-
 #define CONFIG_CMD_FAT
 #define CONFIG_CMD_MMC
 /* Enable FAT write support */
@@ -618,7 +613,13 @@
 #define MMC_QUIRK_MMC_8B_CAPABLE
 /* requird for dw_mmc driver */
 #define CONFIG_BOUNCE_BUFFER
+
+#ifdef CONFIG_MMC_CFF
+#define CONFIG_ENV_IS_IN_MMC
+#define CONFIG_SYS_MMC_ENV_DEV		0/* device 0 */
+#define CONFIG_ENV_OFFSET		512/* just after the MBR */
 #define CONFIG_BOOT_FLASH_TYPE "mmc"
+#endif	/* CONFIG_MMC_CFF */
 #endif	/* CONFIG_MMC */
 
 /*

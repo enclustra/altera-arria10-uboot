@@ -924,13 +924,13 @@ int dram_init(void)
 	if (is_external_fpga_config(gd->fdt_blob) ||
 		CONFIG_UBOOT_EXE_ON_FPGA) {
 		ddr_calibration_sequence();
-#if defined(CONFIG_MMC)
+#if defined(CONFIG_MMC_CFF)
 		mmc_initialize(gd->bd);
 #endif
 	} else {
-#if defined(CONFIG_MMC)
+#if defined(CONFIG_MMC_CFF)
 		rval = cff_from_sdmmc_env();
-#elif defined(CONFIG_CADENCE_QSPI)
+#elif defined(CONFIG_CADENCE_QSPI_CFF)
 		rval = cff_from_qspi_env();
 #elif defined(CONFIG_NAND_DENALI)
 		nand_init();

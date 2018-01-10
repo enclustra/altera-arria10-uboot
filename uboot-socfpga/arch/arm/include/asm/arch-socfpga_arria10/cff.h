@@ -20,7 +20,7 @@ struct raw_flash_info {
 };
 #endif
 
-#if defined(CONFIG_MMC)
+#if defined(CONFIG_MMC_CFF)
 struct sdmmc_flash_info {
 	char *filename;
 	char *dev_part;
@@ -32,7 +32,7 @@ struct cff_flash_info {
 	struct raw_flash_info raw_flashinfo;
 	u32 buffer[1024] __aligned(ARCH_DMA_MINALIGN);
 #endif
-#if defined(CONFIG_MMC)
+#if defined(CONFIG_MMC_CFF)
 	struct sdmmc_flash_info sdmmc_flashinfo;
 	u32 buffer[4096] __aligned(ARCH_DMA_MINALIGN);
 #endif

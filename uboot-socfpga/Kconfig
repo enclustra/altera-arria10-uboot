@@ -70,6 +70,11 @@ config CADENCE_QSPI_CFF
 	prompt "QSPI boot image"
 	depends on CADENCE_QSPI
 
+config MMC_CFF
+	bool
+	prompt "MMC boot image"
+	depends on MMC
+
 config TPL_BUILD
 	bool
 	depends on $KCONFIG_OBJDIR="tpl"

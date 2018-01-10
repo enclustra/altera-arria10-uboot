@@ -41,7 +41,7 @@ static int cff_flash_probe(struct cff_flash_info *cff_flashinfo)
 		return -1;
 	}
 #endif
-#ifdef CONFIG_MMC
+#ifdef CONFIG_MMC_CFF
 	/* we are looking at the FAT partition */
 	if (fs_set_blk_dev("mmc", cff_flashinfo->sdmmc_flashinfo.dev_part,
 		FS_TYPE_FAT)) {
@@ -77,7 +77,7 @@ static int flash_read(struct cff_flash_info *cff_flashinfo,
 		size_read,
 		buffer_ptr);
 #endif
-#ifdef CONFIG_MMC
+#ifdef CONFIG_MMC_CFF
 	bytesread = file_fat_read_at(cff_flashinfo->sdmmc_flashinfo.filename,
 			cff_flashinfo->flash_offset, buffer_ptr, size_read);
 
@@ -118,7 +118,7 @@ static const struct socfpga_system_manager *system_manager_base =
 		(void *)SOCFPGA_SYSMGR_ADDRESS;
 #endif
 
-#ifdef CONFIG_MMC
+#ifdef CONFIG_MMC_CFF
 const char *get_cff_filename(const void *fdt, int *len)
 {
 	const char *cff_filename = NULL;
@@ -289,7 +289,7 @@ static int get_cff_offset(const void *fdt)
 	}
 	return -1;
 }
-#endif /* #ifdef CONFIG_MMC */
+#endif /* #ifdef CONFIG_MMC_CFF */
 
 int cff_from_flash(fpga_fs_info *fpga_fsinfo)
 {
@@ -420,7 +420,7 @@ int cff_from_flash(fpga_fs_info *fpga_fsinfo)
 }
 
 #if defined(CONFIG_CADENCE_QSPI_CFF) || defined(CONFIG_NAND_DENALI) || \
-+(defined(CONFIG_MMC) && defined(CONFIG_CHECK_FPGA_DATA_CRC))
+(defined(CONFIG_MMC_CFF) && defined(CONFIG_CHECK_FPGA_DATA_CRC))
 /*
  * This function is called when the optional checksum checking on SDMMC, QSPI,
  * and NAND FPGA image are required
@@ -441,7 +441,7 @@ static int cff_flash_preinit(struct cff_flash_info *cff_flashinfo,
 #if defined(CONFIG_CADENCE_QSPI_CFF) || defined(CONFIG_NAND_DENALI)
 	cff_flashinfo->flash_offset =
 		simple_strtoul(fpga_fsinfo->filename, NULL, 16);
-#elif defined(CONFIG_MMC)
+#elif defined(CONFIG_MMC_CFF)
 	cff_flashinfo->sdmmc_flashinfo.filename = fpga_fsinfo->filename;
 	cff_flashinfo->sdmmc_flashinfo.dev_part = fpga_fsinfo->dev_part;
 	cff_flashinfo->flash_offset = 0;
@@ -601,7 +601,7 @@ if (0 == cff_flashinfo->remaining) {
 	return 0;
 }
 #endif /* #if defined(CONFIG_CADENCE_QSPI_CFF) || defined(CONFIG_NAND_DENALI) || \
-(defined(CONFIG_MMC) && defined(CONFIG_CHECK_FPGA_DATA_CRC)) */
+(defined(CONFIG_MMC_CFF) && defined(CONFIG_CHECK_FPGA_DATA_CRC)) */
 
 #if defined(CONFIG_CADENCE_QSPI_CFF)
 int cff_from_qspi_env(void)
