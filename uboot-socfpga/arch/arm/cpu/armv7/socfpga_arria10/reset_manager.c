@@ -57,6 +57,11 @@ int is_wdt_in_reset(void)
 /* Write the reset manager register to cause reset */
 void reset_cpu(ulong addr)
 {
+	/* reset pinmuxes and GPIO config */
+	setbits_le32(&system_manager_base->romcode_ctrl,
+		SYSMGR_ROMCODEGRP_CTRL_WARMRSTCFGPINMUX |
+		SYSMGR_ROMCODEGRP_CTRL_WARMRSTCFGIO);
+
 	/* request a warm reset */
 	writel(ALT_RSTMGR_CTL_SWWARMRSTREQ_SET_MSK,
 		&reset_manager_base->ctrl);
