@@ -293,7 +293,7 @@
 	"verify=y\0" \
 	"loadaddr=" __stringify(CONFIG_SYS_LOAD_ADDR) "\0" \
 	"fdtaddr=" __stringify(CONFIG_SYS_DTB_ADDR) "\0" \
-	"preloader_image=uboot-mkpimage.bin\0" \
+	"preloader_image=preloader-mkpimage.bin\0" \
 	"bitstream_image=fpga.rbf.img\0" \
 	"bootscript_image=uboot.scr\0" \
 	"kernel_image=uImage\0" \
