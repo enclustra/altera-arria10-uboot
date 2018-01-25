@@ -6,7 +6,7 @@
 	model = "Enclustra Mercury+ AA1";
 
 	chosen {
-		cff-offset = <0x720000>;
+		cff-offset = <0x100000>;
 	};
 
 	clocks {
