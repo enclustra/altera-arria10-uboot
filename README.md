@@ -1,5 +1,7 @@
 # altera-arria10-uboot
 
+Based on U-Boot 2014.10 generated from SoC EDS 17.0.
+
 ## How to build:
 
 * Install Intel SoC EDS
