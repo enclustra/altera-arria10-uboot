@@ -250,20 +250,6 @@ bscripts:
 		-n "U-Boot ramdisk start script " -d $(BSCR_DIR)/uboot_ramdisk.scr.tmp $(BSCR_DIR)/uboot_ramdisk.scr
 	rm -f $(BSCR_DIR)/uboot_ramdisk.scr.tmp
 
-################
-# Untar
-
-UNTAR_SRC := $(STAMP_DIR)/.untar
-
-.PHONY: src
-src: $(UNTAR_SRC)
-
-$(UNTAR_SRC): $(TGZ)
-	@$(RM) $(PRELOADER_SRC_DIR)
-	$(untar_recipe)
-	@$(CHMOD) -R 755 $(PRELOADER_SRC_DIR)
-	$(stamp)
-
 
 ################
 # Config
@@ -273,7 +259,7 @@ CONFIG := $(STAMP_DIR)/.socfpga_config
 .PHONY: config
 config: $(CONFIG)
 
-$(CONFIG): $(UNTAR_SRC) config.mk
+$(CONFIG): config.mk
 	$(MAKE) $(MAKE_ARGS) -C $(UBOOT_SRC_DIR) $(SOCFPGA_BOARD_CONFIG)
 	$(stamp)
 
@@ -446,7 +432,7 @@ PATCH.APPLY_TARGETS := $(strip $(foreach patchfile,$(PATCH.FILES), \
 .PHONY: patch-apply
 patch-apply: $(PATCH.APPLY_TARGETS)
 
-$(PATCH.APPLY_TARGETS): $(PRELOADER_SRC_DIR)/.applypatch.%: $$(%.PATCH_FILE) $(UNTAR_SRC)
+$(PATCH.APPLY_TARGETS): $(PRELOADER_SRC_DIR)/.applypatch.%: $$(%.PATCH_FILE)
 	@$(ECHO) Applying Patch: $<
 	$(PATCH) -p1 --directory=$(PRELOADER_SRC_DIR) --input=$<
 	$(stamp)
